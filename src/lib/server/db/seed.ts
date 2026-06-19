@@ -1,5 +1,5 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { Database } from 'bun:sqlite';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { sector, industry } from './schema';
 
 const GICS_SECTORS = [
@@ -125,3 +125,4 @@ await db
 
 console.log(`Seeded ${GICS_SECTORS.length} sectors and ${GICS_INDUSTRIES.length} industries.`);
 client.close();
+
