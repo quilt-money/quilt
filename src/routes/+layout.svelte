@@ -1,10 +1,20 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
 	import '../app.css';
+
+	const routeNames: Record<string, string> = {
+		'/dashboard': 'Dashboard',
+		'/holdings': 'Holdings',
+		'/accounts': 'Accounts',
+		'/securities': 'Securities',
+	};
+
+	const currentPage = $derived(routeNames[page.url.pathname] ?? '');
 </script>
 
 <Sidebar.Provider>
@@ -15,20 +25,11 @@
 			<Separator orientation="vertical" class="me-2 h-4" />
 			<Breadcrumb.Root>
 				<Breadcrumb.List>
-					<Breadcrumb.Item class="hidden md:block">
-						<Breadcrumb.Link href="##">Build Your Application</Breadcrumb.Link>
-					</Breadcrumb.Item>
-					<Breadcrumb.Separator class="hidden md:block" />
 					<Breadcrumb.Item>
-						<Breadcrumb.Page>Data Fetching</Breadcrumb.Page>
+						<Breadcrumb.Page>{currentPage}</Breadcrumb.Page>
 					</Breadcrumb.Item>
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</header>
-		<div class="flex flex-1 flex-col gap-4 p-4">
-			{#each Array.from({ length: 24 }) as _, index (index)}
-				<div class="bg-muted/50 aspect-video h-12 w-full rounded-lg"></div>
-			{/each}
-		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>
