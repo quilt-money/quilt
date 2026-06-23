@@ -4,7 +4,7 @@
 		{ title: 'Accounts', url: '/accounts' },
 		{ title: 'Holdings', url: '/holdings' },
 		{ title: 'Securities', url: '/securities' }
-	];
+	] as const;
 </script>
 
 <script lang="ts">

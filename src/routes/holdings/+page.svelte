@@ -12,7 +12,7 @@
 
 	let open = $state(false);
 	let accountId = $state('');
-	let securityId = $state('');
+	let securitySymbol = $state('');
 	let shares = $state('');
 	let basis = $state('');
 
@@ -20,7 +20,6 @@
 
 	$effect(() => {
 		if (data.accounts.length && !accountId) accountId = data.accounts[0].id;
-		if (data.securities.length && !securityId) securityId = data.securities[0].id;
 	});
 </script>
 
@@ -127,6 +126,7 @@
 					return ({ result, update }) => {
 						if (result.type === 'success' || result.type === 'redirect') {
 							open = false;
+							securitySymbol = '';
 							shares = '';
 							basis = '';
 						}
@@ -149,17 +149,14 @@
 						</select>
 					</div>
 					<div class="grid gap-2">
-						<Label for="securityId">Security</Label>
-						<select
-							id="securityId"
-							name="securityId"
-							bind:value={securityId}
-							class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-						>
-							{#each data.securities as s (s.id)}
-								<option value={s.id}>{s.symbol}</option>
-							{/each}
-						</select>
+						<Label for="securitySymbol">Security</Label>
+						<Input
+							id="securitySymbol"
+							name="securitySymbol"
+							bind:value={securitySymbol}
+							placeholder="e.g. AAPL"
+							required
+						/>
 					</div>
 					<div class="grid gap-2">
 						<Label for="shares">Shares</Label>
