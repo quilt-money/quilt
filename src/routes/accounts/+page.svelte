@@ -60,14 +60,20 @@
 	</Table.Root>
 </div>
 
-<Dialog.Root open={!!pendingDelete} onOpenChange={(v) => { if (!v) pendingDelete = null; }}>
+<Dialog.Root
+	open={!!pendingDelete}
+	onOpenChange={(v) => {
+		if (!v) pendingDelete = null;
+	}}
+>
 	<Dialog.Portal>
 		<Dialog.Overlay />
 		<Dialog.Content>
 			<Dialog.Header>
 				<Dialog.Title>Delete account</Dialog.Title>
 				<Dialog.Description>
-					Are you sure you want to delete <strong>{pendingDelete?.name}</strong>? This cannot be undone.
+					Are you sure you want to delete <strong>{pendingDelete?.name}</strong>? This cannot be
+					undone.
 				</Dialog.Description>
 			</Dialog.Header>
 			<form
@@ -82,7 +88,9 @@
 			>
 				<input type="hidden" name="id" value={pendingDelete?.id} />
 				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={() => (pendingDelete = null)}>Cancel</Button>
+					<Button type="button" variant="outline" onclick={() => (pendingDelete = null)}
+						>Cancel</Button
+					>
 					<Button type="submit" variant="destructive">Delete</Button>
 				</Dialog.Footer>
 			</form>

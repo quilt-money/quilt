@@ -120,9 +120,13 @@ const sectorIdByName = Object.fromEntries(sectors.map((s) => [s.name, s.id]));
 
 await db
 	.insert(industry)
-	.values(GICS_INDUSTRIES.map(({ name, sector: sectorName }) => ({ name, sectorId: sectorIdByName[sectorName] })))
+	.values(
+		GICS_INDUSTRIES.map(({ name, sector: sectorName }) => ({
+			name,
+			sectorId: sectorIdByName[sectorName]
+		}))
+	)
 	.onConflictDoNothing();
 
 console.log(`Seeded ${GICS_SECTORS.length} sectors and ${GICS_INDUSTRIES.length} industries.`);
 client.close();
-

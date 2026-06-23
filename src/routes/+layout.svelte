@@ -11,9 +11,9 @@
 
 	const routeNames: Record<string, string> = {
 		'/dashboard': 'Dashboard',
-		'/holdings': 'Holdings',
 		'/accounts': 'Accounts',
-		'/securities': 'Securities',
+		'/holdings': 'Holdings',
+		'/securities': 'Securities'
 	};
 
 	const currentPage = $derived(routeNames[page.url.pathname] ?? '');

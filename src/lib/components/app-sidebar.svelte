@@ -1,15 +1,15 @@
 <script lang="ts" module>
 	const navItems = [
-		{ title: "Dashboard", url: "/dashboard" },
-		{ title: "Holdings", url: "/holdings" },
-		{ title: "Accounts", url: "/accounts" },
-		{ title: "Securities", url: "/securities" },
+		{ title: 'Dashboard', url: '/dashboard' },
+		{ title: 'Accounts', url: '/accounts' },
+		{ title: 'Holdings', url: '/holdings' },
+		{ title: 'Securities', url: '/securities' }
 	];
 </script>
 
 <script lang="ts">
-	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-	import type { ComponentProps } from "svelte";
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import type { ComponentProps } from 'svelte';
 
 	let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
 </script>
