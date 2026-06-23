@@ -7,6 +7,8 @@
 
 	import '../app.css';
 
+	let { children } = $props();
+
 	const routeNames: Record<string, string> = {
 		'/dashboard': 'Dashboard',
 		'/holdings': 'Holdings',
@@ -31,5 +33,6 @@
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</header>
+		{@render children()}
 	</Sidebar.Inset>
 </Sidebar.Provider>
