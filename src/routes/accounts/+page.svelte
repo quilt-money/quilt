@@ -1,16 +1,20 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { enhance } from '$app/forms';
+	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 
 	let { data } = $props();
 
 	let open = $state(false);
 	let name = $state('');
 	let owner = $state('Dan');
+
+	let pendingDelete = $state<{ id: string; name: string } | null>(null);
 </script>
 
 <div class="p-6">
@@ -23,6 +27,7 @@
 			<Table.Row>
 				<Table.Head>Name</Table.Head>
 				<Table.Head>Owner</Table.Head>
+				<Table.Head class="w-10"></Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
@@ -30,11 +35,60 @@
 				<Table.Row>
 					<Table.Cell>{account.name}</Table.Cell>
 					<Table.Cell>{account.owner}</Table.Cell>
+					<Table.Cell class="text-right">
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger>
+								{#snippet child({ props })}
+									<Button {...props} variant="ghost" size="icon" class="h-8 w-8">
+										<EllipsisVertical class="h-4 w-4" />
+									</Button>
+								{/snippet}
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content align="end">
+								<DropdownMenu.Item
+									class="text-destructive"
+									onclick={() => (pendingDelete = { id: account.id, name: account.name })}
+								>
+									Delete account
+								</DropdownMenu.Item>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+					</Table.Cell>
 				</Table.Row>
 			{/each}
 		</Table.Body>
 	</Table.Root>
 </div>
+
+<Dialog.Root open={!!pendingDelete} onOpenChange={(v) => { if (!v) pendingDelete = null; }}>
+	<Dialog.Portal>
+		<Dialog.Overlay />
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>Delete account</Dialog.Title>
+				<Dialog.Description>
+					Are you sure you want to delete <strong>{pendingDelete?.name}</strong>? This cannot be undone.
+				</Dialog.Description>
+			</Dialog.Header>
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					return ({ update }) => {
+						pendingDelete = null;
+						update();
+					};
+				}}
+			>
+				<input type="hidden" name="id" value={pendingDelete?.id} />
+				<Dialog.Footer>
+					<Button type="button" variant="outline" onclick={() => (pendingDelete = null)}>Cancel</Button>
+					<Button type="submit" variant="destructive">Delete</Button>
+				</Dialog.Footer>
+			</form>
+		</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>
 
 <Dialog.Root bind:open>
 	<Dialog.Portal>

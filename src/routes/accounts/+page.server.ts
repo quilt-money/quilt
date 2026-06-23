@@ -1,5 +1,6 @@
 import { db } from '$lib/server/db';
 import { account } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 
 export async function load() {
@@ -17,5 +18,12 @@ export const actions = {
 		if (owner !== 'Dan' && owner !== 'Emily') return fail(400, { error: 'Invalid owner' });
 
 		await db.insert(account).values({ name, owner });
+	},
+
+	delete: async ({ request }) => {
+		const data = await request.formData();
+		const id = data.get('id')?.toString();
+		if (!id) return fail(400, { error: 'Missing id' });
+		await db.delete(account).where(eq(account.id, id));
 	}
 };
