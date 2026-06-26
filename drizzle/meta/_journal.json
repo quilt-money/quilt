@@ -8,6 +8,20 @@
       "when": 1781833781989,
       "tag": "0000_bored_magneto",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1782183958764,
+      "tag": "0001_blue_hitman",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782499955493,
+      "tag": "0002_sweet_miracleman",
+      "breakpoints": true
     }
   ]
 }
