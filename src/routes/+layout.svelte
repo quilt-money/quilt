@@ -9,14 +9,23 @@
 
 	let { children } = $props();
 
-	const routeNames: Record<string, string> = {
-		'/dashboard': 'Dashboard',
-		'/accounts': 'Accounts',
-		'/holdings': 'Holdings',
-		'/securities': 'Securities'
-	};
+	type Crumb = { label: string; href?: string };
 
-	const currentPage = $derived(routeNames[page.url.pathname] ?? '');
+	const breadcrumbs = $derived.by((): Crumb[] => {
+		const path = page.url.pathname;
+
+		if (path === '/accounts') {
+			return [{ label: 'Accounts' }];
+		}
+		if (path.startsWith('/accounts/')) {
+			const name = (page.data as { account?: { name: string } }).account?.name ?? 'Account';
+			return [{ label: 'Accounts', href: '/accounts' }, { label: name }];
+		}
+		if (path === '/dashboard') return [{ label: 'Dashboard' }];
+		if (path === '/holdings') return [{ label: 'Holdings' }];
+		if (path === '/securities') return [{ label: 'Securities' }];
+		return [];
+	});
 </script>
 
 <Sidebar.Provider>
@@ -27,9 +36,18 @@
 			<Separator orientation="vertical" class="me-2 h-4" />
 			<Breadcrumb.Root>
 				<Breadcrumb.List>
-					<Breadcrumb.Item>
-						<Breadcrumb.Page>{currentPage}</Breadcrumb.Page>
-					</Breadcrumb.Item>
+					{#each breadcrumbs as crumb, i (crumb.label)}
+						{#if i > 0}
+							<Breadcrumb.Separator />
+						{/if}
+						<Breadcrumb.Item>
+							{#if crumb.href}
+								<Breadcrumb.Link href={crumb.href}>{crumb.label}</Breadcrumb.Link>
+							{:else}
+								<Breadcrumb.Page>{crumb.label}</Breadcrumb.Page>
+							{/if}
+						</Breadcrumb.Item>
+					{/each}
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</header>
