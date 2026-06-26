@@ -7,12 +7,14 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { enhance } from '$app/forms';
 	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
+	import TagInput from '$lib/components/TagInput.svelte';
 
 	let { data } = $props();
 
 	let open = $state(false);
 	let name = $state('');
 	let owner = $state('Dan');
+	let tagInput = $state<ReturnType<typeof TagInput> | undefined>(undefined);
 
 	let pendingDelete = $state<{ id: string; name: string } | null>(null);
 </script>
@@ -115,6 +117,7 @@
 							open = false;
 							name = '';
 							owner = 'Dan';
+							tagInput?.reset();
 						}
 						update();
 					};
@@ -124,6 +127,10 @@
 					<div class="grid gap-2">
 						<Label for="name">Account name</Label>
 						<Input id="name" name="name" bind:value={name} placeholder="e.g. Roth IRA" required />
+					</div>
+					<div class="grid gap-2">
+						<Label>Tags</Label>
+						<TagInput bind:this={tagInput} availableTags={data.tags.map((t) => t.name)} />
 					</div>
 					<div class="grid gap-2">
 						<Label for="owner">Owner</Label>
