@@ -6,6 +6,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import TagInput from '$lib/components/TagInput.svelte';
 
@@ -34,10 +35,17 @@
 		</Table.Header>
 		<Table.Body>
 			{#each data.accounts as account (account.id)}
-				<Table.Row>
+				<Table.Row
+					class="cursor-pointer"
+					onclick={(e) => {
+						if (!(e.target as HTMLElement).closest('[data-no-nav]')) {
+							goto(`/accounts/${account.id}`);
+						}
+					}}
+				>
 					<Table.Cell>{account.name}</Table.Cell>
 					<Table.Cell>{account.owner}</Table.Cell>
-					<Table.Cell class="text-right">
+					<Table.Cell class="text-right" data-no-nav>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger>
 								{#snippet child({ props })}
