@@ -32,6 +32,9 @@
 <div class="p-6">
 	<PageHeader>
 		{#snippet actions()}
+			<form method="POST" action="?/sync" class="contents" use:enhance>
+				<Button type="submit" variant="outline">Sync securities</Button>
+			</form>
 			<Button onclick={() => (open = true)}>Create security</Button>
 		{/snippet}
 		<h1 class="text-2xl font-semibold">Securities</h1>
