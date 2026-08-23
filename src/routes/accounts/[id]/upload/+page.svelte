@@ -182,17 +182,16 @@
 		{/if}
 
 		<div class="mt-6 flex justify-between">
-			<Button type="button" variant="outline" href="/accounts/{data.account.id}">Cancel</Button>
-			<div class="flex gap-2">
-				{#if stepValue !== 'upload'}
-					<Button type="button" variant="outline" onclick={goBack}>Back</Button>
-				{/if}
-				{#if stepValue !== 'submit'}
-					<Button type="button" onclick={goNext} disabled={!selectedFile}>Next</Button>
-				{:else}
-					<Button type="submit">Submit</Button>
-				{/if}
-			</div>
+			{#if stepValue === 'upload'}
+				<Button type="button" variant="outline" href="/accounts/{data.account.id}">Cancel</Button>
+			{:else}
+				<Button type="button" variant="outline" onclick={goBack}>Back</Button>
+			{/if}
+			{#if stepValue !== 'submit'}
+				<Button type="button" onclick={goNext} disabled={!selectedFile}>Next</Button>
+			{:else}
+				<Button type="submit">Submit</Button>
+			{/if}
 		</div>
 	</form>
 </div>
