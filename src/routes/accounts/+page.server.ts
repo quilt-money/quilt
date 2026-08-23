@@ -23,7 +23,10 @@ export const actions = {
 
 		const tagNames: string[] = tagsRaw ? JSON.parse(tagsRaw) : [];
 
-		const [{ accountId }] = await db.insert(account).values({ name, owner }).returning({ accountId: account.id });
+		const [{ accountId }] = await db
+			.insert(account)
+			.values({ name, owner })
+			.returning({ accountId: account.id });
 
 		if (tagNames.length > 0) {
 			const tagIds: string[] = [];
@@ -32,18 +35,14 @@ export const actions = {
 				if (existing.length > 0) {
 					tagIds.push(existing[0].id);
 				} else {
-					const [{ tagId }] = await db.insert(tag).values({ name: tagName }).returning({ tagId: tag.id });
+					const [{ tagId }] = await db
+						.insert(tag)
+						.values({ name: tagName })
+						.returning({ tagId: tag.id });
 					tagIds.push(tagId);
 				}
 			}
 			await db.insert(accountTag).values(tagIds.map((tagId) => ({ accountId, tagId })));
 		}
-	},
-
-	delete: async ({ request }) => {
-		const data = await request.formData();
-		const id = data.get('id')?.toString();
-		if (!id) return fail(400, { error: 'Missing id' });
-		await db.delete(account).where(eq(account.id, id));
 	}
 };

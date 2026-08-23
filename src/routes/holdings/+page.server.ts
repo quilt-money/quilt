@@ -46,12 +46,5 @@ export const actions = {
 		if (isNaN(basis)) return fail(400, { error: 'Basis is required' });
 
 		await db.insert(holding).values({ accountId, securityId, shares, basis });
-	},
-
-	delete: async ({ request }) => {
-		const data = await request.formData();
-		const id = data.get('id')?.toString();
-		if (!id) return fail(400, { error: 'Missing id' });
-		await db.delete(holding).where(eq(holding.id, id));
 	}
 };
