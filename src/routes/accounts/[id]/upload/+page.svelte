@@ -6,6 +6,7 @@
 	import { enhance } from '$app/forms';
 	import { diffCsvHeader } from '$lib/holdings-csv';
 	import CircleCheckIcon from '@lucide/svelte/icons/circle-check';
+	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 
 	let { data, form } = $props();
 
@@ -20,7 +21,9 @@
 	let selectedFile = $state<File | null>(null);
 	let csvText = $state('');
 	let fileInput = $state<HTMLInputElement | null>(null);
+	let submitting = $state(false);
 	let errorMsg = $derived<string | null>(form?.message ?? null);
+	let uploadResult = $derived(form?.success ? form : null);
 
 	function parseCsvPreview(text: string): { header: string[]; rows: string[][] } {
 		const parseLine = (line: string) => {
@@ -114,7 +117,18 @@
 		<p class="text-sm text-muted-foreground">{data.account.name}</p>
 	</PageHeader>
 
-	<form method="POST" action="?/upload" enctype="multipart/form-data" use:enhance>
+	<form
+		method="POST"
+		action="?/upload"
+		enctype="multipart/form-data"
+		use:enhance={() => {
+			submitting = true;
+			return async ({ update }) => {
+				await update();
+				submitting = false;
+			};
+		}}
+	>
 		<input
 			bind:this={fileInput}
 			name="file"
@@ -197,28 +211,71 @@
 				</Table.Root>
 			</div>
 		{:else if stepValue === 'submit'}
-			<div class="rounded-lg border p-6 text-center">
-				<p class="text-sm font-medium">{selectedFile?.name}</p>
-				<p class="mt-1 text-xs text-muted-foreground">
-					{csv.rows.length} row{csv.rows.length === 1 ? '' : 's'} ready to upload
-				</p>
-			</div>
+			{#if uploadResult}
+				<div
+					class="rounded-lg border border-green-500/50 bg-green-500/10 p-6 text-center text-green-600 dark:text-green-400"
+				>
+					<CircleCheckIcon class="mx-auto mb-2 size-6" />
+					<p class="font-medium">Upload complete</p>
+					<ul class="mt-3 space-y-1 text-sm text-foreground">
+						<li>
+							{uploadResult.securitiesInserted}
+							{uploadResult.securitiesInserted === 1 ? 'security' : 'securities'} added
+						</li>
+						<li>
+							{uploadResult.securitiesExisting}
+							{uploadResult.securitiesExisting === 1 ? 'security' : 'securities'} already existed
+						</li>
+						<li>
+							{uploadResult.holdingsUploaded}
+							{uploadResult.holdingsUploaded === 1 ? 'holding row' : 'holding rows'} uploaded
+						</li>
+					</ul>
+				</div>
+			{:else}
+				<div class="rounded-lg border p-6 text-center">
+					<p class="text-sm font-medium">{selectedFile?.name}</p>
+					<p class="mt-1 text-xs text-muted-foreground">
+						{csv.rows.length} row{csv.rows.length === 1 ? '' : 's'} ready to upload
+					</p>
+				</div>
+			{/if}
 		{/if}
 
 		{#if errorMsg}
 			<p class="mt-4 text-sm text-destructive">{errorMsg}</p>
 		{/if}
 
-		<div class="mt-6 flex justify-between">
-			{#if stepValue === 'upload'}
-				<Button type="button" variant="outline" href="/accounts/{data.account.id}">Cancel</Button>
+		<div class="mt-6 flex justify-end">
+			{#if uploadResult}
+				<Button href="/accounts/{data.account.id}">Done</Button>
 			{:else}
-				<Button type="button" variant="outline" onclick={goBack}>Back</Button>
-			{/if}
-			{#if stepValue !== 'submit'}
-				<Button type="button" onclick={goNext} disabled={!canProceed}>Next</Button>
-			{:else}
-				<Button type="submit">Submit</Button>
+				<div class="flex w-full justify-between">
+					{#if stepValue === 'upload'}
+						<Button
+							type="button"
+							variant="outline"
+							disabled={submitting}
+							href="/accounts/{data.account.id}"
+						>
+							Cancel
+						</Button>
+					{:else}
+						<Button type="button" variant="outline" disabled={submitting} onclick={goBack}>
+							Back
+						</Button>
+					{/if}
+					{#if stepValue !== 'submit'}
+						<Button type="button" onclick={goNext} disabled={!canProceed}>Next</Button>
+					{:else}
+						<Button type="submit" disabled={submitting}>
+							{#if submitting}
+								<LoaderCircleIcon class="size-4 animate-spin" />
+							{/if}
+							Submit
+						</Button>
+					{/if}
+				</div>
 			{/if}
 		</div>
 	</form>

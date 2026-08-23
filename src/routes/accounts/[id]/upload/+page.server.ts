@@ -1,9 +1,18 @@
 import { db } from '$lib/server/db';
-import { account } from '$lib/server/db/schema';
+import { account, security, holding } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { parse } from 'csv/sync';
 import { HOLDINGS_CSV_HEADER, isValidCsvHeader } from '$lib/holdings-csv';
+
+type CsvRow = { Symbol: string; Name: string; Shares: string; Basis: string };
+
+type HoldingRow = {
+	symbol: string;
+	fullName: string | null;
+	shares: number | null;
+	basis: number | null;
+};
 
 export async function load({ params }) {
 	const [acct] = await db.select().from(account).where(eq(account.id, params.id)).limit(1);
@@ -32,6 +41,71 @@ export const actions = {
 
 		console.log('CSV header:', header);
 
-		redirect(303, `/accounts/${params.id}`);
+		const csvRows = parse(text, { columns: true, skip_empty_lines: true }) as CsvRow[];
+
+		const rows: HoldingRow[] = [];
+		for (const [index, row] of csvRows.entries()) {
+			const line = index + 2;
+			const symbol = row.Symbol?.trim().toUpperCase();
+			if (!symbol) return fail(400, { message: `Row ${line}: Symbol is required` });
+
+			const sharesRaw = row.Shares?.trim();
+			const basisRaw = row.Basis?.trim();
+			const shares = sharesRaw ? Number(sharesRaw) : null;
+			const basis = basisRaw ? Number(basisRaw) : null;
+
+			if (shares !== null && Number.isNaN(shares)) {
+				return fail(400, { message: `Row ${line}: Shares must be a number` });
+			}
+			if (basis !== null && Number.isNaN(basis)) {
+				return fail(400, { message: `Row ${line}: Basis must be a number` });
+			}
+
+			rows.push({ symbol, fullName: row.Name?.trim() || null, shares, basis });
+		}
+
+		let securitiesInserted = 0;
+		let securitiesExisting = 0;
+
+		db.transaction((tx) => {
+			for (const row of rows) {
+				let sec = tx
+					.select({ id: security.id })
+					.from(security)
+					.where(eq(security.symbol, row.symbol))
+					.get();
+
+				if (sec) {
+					securitiesExisting++;
+				} else {
+					sec = tx
+						.insert(security)
+						.values({ symbol: row.symbol, fullName: row.fullName })
+						.returning({ id: security.id })
+						.get();
+					securitiesInserted++;
+				}
+
+				tx.insert(holding)
+					.values({
+						accountId: params.id,
+						securityId: sec.id,
+						shares: row.shares,
+						basis: row.basis
+					})
+					.onConflictDoUpdate({
+						target: [holding.accountId, holding.securityId],
+						set: { shares: row.shares, basis: row.basis }
+					})
+					.run();
+			}
+		});
+
+		return {
+			success: true,
+			securitiesInserted,
+			securitiesExisting,
+			holdingsUploaded: rows.length
+		};
 	}
 };
