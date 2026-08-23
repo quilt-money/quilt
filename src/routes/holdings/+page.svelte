@@ -2,6 +2,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -13,7 +14,7 @@
 
 	let open = $state(false);
 	let accountId = $state('');
-	let securitySymbol = $state('');
+	let securityId = $state('');
 	let shares = $state('');
 	let basis = $state('');
 
@@ -27,7 +28,20 @@
 <div class="p-6">
 	<PageHeader>
 		{#snippet actions()}
-			<Button onclick={() => (open = true)}>Create holding</Button>
+			{#if data.securities.length === 0}
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<span {...props}>
+								<Button disabled>Create holding</Button>
+							</span>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content>You need securities before creating holdings</Tooltip.Content>
+				</Tooltip.Root>
+			{:else}
+				<Button onclick={() => (open = true)}>Create holding</Button>
+			{/if}
 		{/snippet}
 		<h1 class="text-2xl font-semibold">Holdings</h1>
 	</PageHeader>
@@ -130,7 +144,7 @@
 					return ({ result, update }) => {
 						if (result.type === 'success' || result.type === 'redirect') {
 							open = false;
-							securitySymbol = '';
+							securityId = data.securities[0]?.id ?? '';
 							shares = '';
 							basis = '';
 						}
@@ -153,14 +167,17 @@
 						</select>
 					</div>
 					<div class="grid gap-2">
-						<Label for="securitySymbol">Security</Label>
-						<Input
-							id="securitySymbol"
-							name="securitySymbol"
-							bind:value={securitySymbol}
-							placeholder="e.g. AAPL"
-							required
-						/>
+						<Label for="securityId">Security</Label>
+						<select
+							id="securityId"
+							name="securityId"
+							bind:value={securityId}
+							class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+						>
+							{#each data.securities as s (s.id)}
+								<option value={s.id}>{s.symbol}</option>
+							{/each}
+						</select>
 					</div>
 					<div class="grid gap-2">
 						<Label for="shares">Shares</Label>
