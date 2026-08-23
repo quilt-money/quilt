@@ -54,6 +54,7 @@
 	"dependencies": {
 		"@tailwindcss/vite": "^4.3.1",
 		"better-sqlite3": "^12.10.0",
+		"csv": "^6.6.3",
 		"tailwindcss": "^4.3.1"
 	}
 }
