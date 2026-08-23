@@ -4,10 +4,30 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
+	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { enhance } from '$app/forms';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let { data } = $props();
+
+	let selected = $state(new Set<string>());
+	let syncing = $state(false);
+
+	let allSelected = $derived(
+		data.securities.length > 0 && selected.size === data.securities.length
+	);
+
+	function toggleAll() {
+		selected = allSelected ? new Set() : new Set(data.securities.map((s) => s.id));
+	}
+
+	function toggle(id: string) {
+		const next = new SvelteSet(selected);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selected = next;
+	}
 
 	let open = $state(false);
 	let symbol = $state('');
@@ -30,42 +50,67 @@
 </script>
 
 <div class="p-6">
-	<PageHeader>
-		{#snippet actions()}
-			<form method="POST" action="?/sync" class="contents" use:enhance>
-				<Button type="submit" variant="outline">Sync securities</Button>
-			</form>
-			<Button onclick={() => (open = true)}>Create security</Button>
-		{/snippet}
-		<h1 class="text-2xl font-semibold">Securities</h1>
-	</PageHeader>
+	<form
+		method="POST"
+		action="?/sync"
+		use:enhance={() => {
+			syncing = true;
+			return async ({ update }) => {
+				await update();
+				selected = new Set();
+				syncing = false;
+			};
+		}}
+	>
+		<PageHeader>
+			{#snippet actions()}
+				<Button type="submit" variant="outline" disabled={syncing || selected.size === 0}>
+					{syncing ? 'Syncing…' : selected.size > 0 ? `Sync ${selected.size} securities` : 'Sync'}
+				</Button>
+				<Button type="button" onclick={() => (open = true)}>Create security</Button>
+			{/snippet}
+			<h1 class="text-2xl font-semibold">Securities</h1>
+		</PageHeader>
 
-	<Table.Root>
-		<Table.Header>
-			<Table.Row>
-				<Table.Head>Symbol</Table.Head>
-				<Table.Head>Name</Table.Head>
-				<Table.Head>Category</Table.Head>
-				<Table.Head>Type</Table.Head>
-				<Table.Head>Sector</Table.Head>
-				<Table.Head>Industry</Table.Head>
-				<Table.Head>Region</Table.Head>
-			</Table.Row>
-		</Table.Header>
-		<Table.Body>
-			{#each data.securities as s (s.id)}
+		<Table.Root>
+			<Table.Header>
 				<Table.Row>
-					<Table.Cell class="font-mono">{s.symbol}</Table.Cell>
-					<Table.Cell>{s.fullName ?? '—'}</Table.Cell>
-					<Table.Cell>{s.category ?? '—'}</Table.Cell>
-					<Table.Cell>{s.type ?? '—'}</Table.Cell>
-					<Table.Cell>{s.sector ?? '—'}</Table.Cell>
-					<Table.Cell>{s.industry ?? '—'}</Table.Cell>
-					<Table.Cell>{s.region ?? '—'}</Table.Cell>
+					<Table.Head class="w-10">
+						<Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
+					</Table.Head>
+					<Table.Head>Symbol</Table.Head>
+					<Table.Head>Name</Table.Head>
+					<Table.Head>Category</Table.Head>
+					<Table.Head>Type</Table.Head>
+					<Table.Head>Sector</Table.Head>
+					<Table.Head>Industry</Table.Head>
+					<Table.Head>Region</Table.Head>
 				</Table.Row>
-			{/each}
-		</Table.Body>
-	</Table.Root>
+			</Table.Header>
+			<Table.Body>
+				{#each data.securities as s (s.id)}
+					<Table.Row>
+						<Table.Cell>
+							<Checkbox
+								name="ids"
+								value={s.id}
+								checked={selected.has(s.id)}
+								onCheckedChange={() => toggle(s.id)}
+								aria-label="Select {s.symbol}"
+							/>
+						</Table.Cell>
+						<Table.Cell class="font-mono">{s.symbol}</Table.Cell>
+						<Table.Cell>{s.fullName ?? '—'}</Table.Cell>
+						<Table.Cell>{s.category ?? '—'}</Table.Cell>
+						<Table.Cell>{s.type ?? '—'}</Table.Cell>
+						<Table.Cell>{s.sector ?? '—'}</Table.Cell>
+						<Table.Cell>{s.industry ?? '—'}</Table.Cell>
+						<Table.Cell>{s.region ?? '—'}</Table.Cell>
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
+	</form>
 </div>
 
 <!-- Create security -->

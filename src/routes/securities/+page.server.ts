@@ -8,135 +8,10 @@ import {
 	region,
 	priceSnapshot
 } from '$lib/server/db/schema';
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-
-// FMP's sector taxonomy doesn't match the GICS sector names seeded in this app,
-// so map its ~11 sector names onto our GICS sectors. FMP's industry field is far
-// more granular than our GICS industries and doesn't map cleanly, so it's left alone.
-const FMP_SECTOR_TO_GICS: Record<string, string> = {
-	'Basic Materials': 'Materials',
-	'Communication Services': 'Communication Services',
-	'Consumer Cyclical': 'Consumer Discretionary',
-	'Consumer Defensive': 'Consumer Staples',
-	Energy: 'Energy',
-	'Financial Services': 'Financials',
-	Healthcare: 'Health Care',
-	Industrials: 'Industrials',
-	'Real Estate': 'Real Estate',
-	Technology: 'Information Technology',
-	Utilities: 'Utilities'
-};
-
-// Standard MSCI-style developed/emerging market classification, keyed by ISO alpha-2 country code.
-const DEVELOPED_COUNTRIES = new Set([
-	'CA',
-	'GB',
-	'DE',
-	'FR',
-	'JP',
-	'AU',
-	'CH',
-	'NL',
-	'SE',
-	'DK',
-	'NO',
-	'FI',
-	'BE',
-	'AT',
-	'IE',
-	'IT',
-	'ES',
-	'PT',
-	'IL',
-	'SG',
-	'HK',
-	'NZ'
-]);
-const EMERGING_COUNTRIES = new Set([
-	'CN',
-	'IN',
-	'BR',
-	'TW',
-	'KR',
-	'ZA',
-	'MX',
-	'ID',
-	'TH',
-	'MY',
-	'PH',
-	'PL',
-	'TR',
-	'SA',
-	'AE',
-	'QA',
-	'KW',
-	'CL',
-	'CO',
-	'PE',
-	'EG',
-	'GR',
-	'HU',
-	'CZ'
-]);
-
-function regionBucketFor(country: string | null): string {
-	if (country === 'US') return 'US';
-	if (country && DEVELOPED_COUNTRIES.has(country)) return 'International Developed';
-	if (country && EMERGING_COUNTRIES.has(country)) return 'Emerging Markets';
-	return 'Other';
-}
-
-type FmpProfileResponse = {
-	symbol: string;
-	price: number | null;
-	marketCap: number | null;
-	beta: number | null;
-	lastDividend: number | null;
-	range: string | null;
-	change: number | null;
-	changePercentage: number | null;
-	volume: number | null;
-	averageVolume: number | null;
-	companyName: string | null;
-	currency: string | null;
-	cik: string | null;
-	isin: string | null;
-	cusip: string | null;
-	exchangeFullName: string | null;
-	exchange: string | null;
-	industry: string | null;
-	website: string | null;
-	description: string | null;
-	ceo: string | null;
-	sector: string | null;
-	country: string | null;
-	fullTimeEmployees: string | null;
-	phone: string | null;
-	address: string | null;
-	city: string | null;
-	state: string | null;
-	zip: string | null;
-	image: string | null;
-	ipoDate: string | null;
-	defaultImage: boolean;
-	isEtf: boolean;
-	isActivelyTrading: boolean;
-	isAdr: boolean;
-	isFund: boolean;
-};
-
-async function fetchFmpProfile(
-	fetchFn: typeof fetch,
-	symbol: string
-): Promise<FmpProfileResponse | null> {
-	const url = `https://financialmodelingprep.com/stable/profile?symbol=${encodeURIComponent(symbol)}&apikey=${env.FMP_API_KEY}`;
-	const res = await fetchFn(url);
-	if (!res.ok) return null;
-	const data: FmpProfileResponse[] = await res.json();
-	return data[0] ?? null;
-}
+import { FMP_SECTOR_TO_GICS, fetchFmpProfile, regionBucketFor } from '$lib/server/fmp';
 
 export async function load() {
 	const securities = await db
@@ -202,10 +77,17 @@ export const actions = {
 		});
 	},
 
-	sync: async ({ fetch }) => {
+	sync: async ({ request, fetch }) => {
 		if (!env.FMP_API_KEY) return fail(500, { error: 'FMP_API_KEY is not set' });
 
-		const securities = await db.select({ id: security.id, symbol: security.symbol }).from(security);
+		const data = await request.formData();
+		const ids = data.getAll('ids').map((id) => id.toString());
+		if (ids.length === 0) return fail(400, { error: 'Select at least one security' });
+
+		const securities = await db
+			.select({ id: security.id, symbol: security.symbol })
+			.from(security)
+			.where(inArray(security.id, ids));
 
 		const [securityTypes, sectors, regions] = await Promise.all([
 			db.select().from(securityType),
@@ -221,7 +103,7 @@ export const actions = {
 		for (const s of securities) {
 			let profile;
 			try {
-				profile = await fetchFmpProfile(fetch, s.symbol);
+				profile = await fetchFmpProfile(fetch, env.FMP_API_KEY, s.symbol);
 			} catch (err) {
 				console.error(`FMP sync failed for ${s.symbol}:`, err);
 				continue;
