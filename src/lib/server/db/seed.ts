@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { sector, industry } from './schema';
+import { sector, industry, region, securityType } from './schema';
 
 const GICS_SECTORS = [
 	'Energy',
@@ -104,21 +104,26 @@ const GICS_INDUSTRIES: { name: string; sector: string }[] = [
 	{ name: 'Real Estate Management & Development', sector: 'Real Estate' }
 ];
 
+const REGIONS = ['US', 'International Developed', 'Emerging Markets', 'Other'];
+
+const SECURITY_TYPES = ['Stock', 'ETF', 'Mutual Fund', 'Bond', 'Cash', 'Other'];
+
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
 const client = new Database(DATABASE_URL);
 const db = drizzle(client);
 
-await db
+const insertedSectors = await db
 	.insert(sector)
 	.values(GICS_SECTORS.map((name) => ({ name })))
-	.onConflictDoNothing();
+	.onConflictDoNothing()
+	.returning({ id: sector.id });
 
 const sectors = await db.select().from(sector);
 const sectorIdByName = Object.fromEntries(sectors.map((s) => [s.name, s.id]));
 
-await db
+const insertedIndustries = await db
 	.insert(industry)
 	.values(
 		GICS_INDUSTRIES.map(({ name, sector: sectorName }) => ({
@@ -126,7 +131,22 @@ await db
 			sectorId: sectorIdByName[sectorName]
 		}))
 	)
-	.onConflictDoNothing();
+	.onConflictDoNothing()
+	.returning({ id: industry.id });
 
-console.log(`Seeded ${GICS_SECTORS.length} sectors and ${GICS_INDUSTRIES.length} industries.`);
+const insertedRegions = await db
+	.insert(region)
+	.values(REGIONS.map((name) => ({ name })))
+	.onConflictDoNothing()
+	.returning({ id: region.id });
+
+const insertedSecurityTypes = await db
+	.insert(securityType)
+	.values(SECURITY_TYPES.map((name) => ({ name })))
+	.onConflictDoNothing()
+	.returning({ id: securityType.id });
+
+console.log(
+	`Seeded ${insertedSectors.length} sectors, ${insertedIndustries.length} industries, ${insertedRegions.length} regions, and ${insertedSecurityTypes.length} security types.`
+);
 client.close();
