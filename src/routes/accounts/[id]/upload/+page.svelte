@@ -5,6 +5,7 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { enhance } from '$app/forms';
 	import { diffCsvHeader } from '$lib/holdings-csv';
+	import CircleCheckIcon from '@lucide/svelte/icons/circle-check';
 
 	let { data, form } = $props();
 
@@ -166,6 +167,13 @@
 					{#if headerIssues.extra.length}
 						<p>Unexpected: {headerIssues.extra.join(', ')}</p>
 					{/if}
+				</div>
+			{:else}
+				<div
+					class="mb-4 flex items-center gap-2 rounded-lg border border-green-500/50 bg-green-500/10 p-4 text-sm text-green-600 dark:text-green-400"
+				>
+					<CircleCheckIcon class="size-4 shrink-0" />
+					<p class="font-medium">Your CSV matches the expected CSV format!</p>
 				</div>
 			{/if}
 			<div class="max-h-96 overflow-auto rounded-lg border">
