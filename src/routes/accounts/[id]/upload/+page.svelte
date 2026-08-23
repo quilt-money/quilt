@@ -100,7 +100,7 @@
 	}
 </script>
 
-<div class="mx-auto max-w-2xl p-6">
+<div class="px-8 py-6">
 	<PageHeader>
 		<h1 class="text-2xl font-semibold">Upload holdings</h1>
 		<p class="text-sm text-muted-foreground">{data.account.name}</p>

@@ -81,9 +81,7 @@
 			data-state={state}
 			class={cn(
 				'flex',
-				orientation === 'horizontal'
-					? 'flex-1 flex-col items-center gap-2 last:flex-none'
-					: 'flex-row items-start gap-3'
+				orientation === 'horizontal' ? 'flex-col items-center gap-2' : 'flex-row items-start gap-3'
 			)}
 		>
 			<button
