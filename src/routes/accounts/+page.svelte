@@ -1,15 +1,14 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import TagInput from '$lib/components/TagInput.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 
@@ -43,31 +42,12 @@
 					class="cursor-pointer"
 					onclick={(e) => {
 						if (!(e.target as HTMLElement).closest('[data-no-nav]')) {
-							goto(`/accounts/${account.id}`);
+							goto(resolve(`/accounts/${account.id}`));
 						}
 					}}
 				>
 					<Table.Cell>{account.name}</Table.Cell>
 					<Table.Cell>{account.owner}</Table.Cell>
-					<Table.Cell class="text-right" data-no-nav>
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger>
-								{#snippet child({ props })}
-									<Button {...props} variant="ghost" size="icon" class="h-8 w-8">
-										<EllipsisVertical class="h-4 w-4" />
-									</Button>
-								{/snippet}
-							</DropdownMenu.Trigger>
-							<DropdownMenu.Content align="end">
-								<DropdownMenu.Item
-									class="text-destructive"
-									onclick={() => (pendingDelete = { id: account.id, name: account.name })}
-								>
-									Delete account
-								</DropdownMenu.Item>
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
-					</Table.Cell>
 				</Table.Row>
 			{/each}
 		</Table.Body>

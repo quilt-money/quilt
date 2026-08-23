@@ -1,13 +1,11 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { enhance } from '$app/forms';
-	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 
 	let { data } = $props();
@@ -18,8 +16,6 @@
 	let shares = $state('');
 	let basis = $state('');
 
-	let pendingDelete = $state<{ id: string; label: string } | null>(null);
-
 	$effect(() => {
 		if (data.accounts.length && !accountId) accountId = data.accounts[0].id;
 	});
@@ -27,6 +23,8 @@
 
 <div class="p-6">
 	<PageHeader>
+		<h1 class="text-2xl font-semibold">Holdings</h1>
+
 		{#snippet actions()}
 			{#if data.securities.length === 0}
 				<Tooltip.Root>
@@ -43,7 +41,6 @@
 				<Button onclick={() => (open = true)}>Create holding</Button>
 			{/if}
 		{/snippet}
-		<h1 class="text-2xl font-semibold">Holdings</h1>
 	</PageHeader>
 
 	<Table.Root>
@@ -63,70 +60,11 @@
 					<Table.Cell class="font-mono">{h.securitySymbol}</Table.Cell>
 					<Table.Cell class="text-right">{h.shares}</Table.Cell>
 					<Table.Cell class="text-right">{h.basis}</Table.Cell>
-					<Table.Cell class="text-right">
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger>
-								{#snippet child({ props })}
-									<Button {...props} variant="ghost" size="icon" class="h-8 w-8">
-										<EllipsisVertical class="h-4 w-4" />
-									</Button>
-								{/snippet}
-							</DropdownMenu.Trigger>
-							<DropdownMenu.Content align="end">
-								<DropdownMenu.Item
-									class="text-destructive"
-									onclick={() =>
-										(pendingDelete = { id: h.id, label: `${h.accountName} / ${h.securitySymbol}` })}
-								>
-									Delete holding
-								</DropdownMenu.Item>
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
-					</Table.Cell>
 				</Table.Row>
 			{/each}
 		</Table.Body>
 	</Table.Root>
 </div>
-
-<!-- Delete confirmation -->
-<Dialog.Root
-	open={!!pendingDelete}
-	onOpenChange={(v) => {
-		if (!v) pendingDelete = null;
-	}}
->
-	<Dialog.Portal>
-		<Dialog.Overlay />
-		<Dialog.Content>
-			<Dialog.Header>
-				<Dialog.Title>Delete holding</Dialog.Title>
-				<Dialog.Description>
-					Are you sure you want to delete <strong>{pendingDelete?.label}</strong>? This cannot be
-					undone.
-				</Dialog.Description>
-			</Dialog.Header>
-			<form
-				method="POST"
-				action="?/delete"
-				use:enhance={() => {
-					return ({ update }) => {
-						pendingDelete = null;
-						update();
-					};
-				}}
-			>
-				<input type="hidden" name="id" value={pendingDelete?.id} />
-				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={() => (pendingDelete = null)}
-						>Cancel</Button
-					>
-					<Button type="submit" variant="destructive">Delete</Button>
-				</Dialog.Footer>
-			</form>
-		</Dialog.Content>
-	</Dialog.Portal>
-</Dialog.Root>
 
 <!-- Create holding -->
 <Dialog.Root bind:open>
