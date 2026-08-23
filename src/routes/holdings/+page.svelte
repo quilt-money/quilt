@@ -50,7 +50,7 @@
 		<Table.Header>
 			<Table.Row>
 				<Table.Head>Account</Table.Head>
-				<Table.Head>Security</Table.Head>
+				<Table.Head>Symbol</Table.Head>
 				<Table.Head class="text-right">Shares</Table.Head>
 				<Table.Head class="text-right">Basis</Table.Head>
 				<Table.Head class="w-10"></Table.Head>
@@ -60,7 +60,7 @@
 			{#each data.holdings as h (h.id)}
 				<Table.Row>
 					<Table.Cell>{h.accountName}</Table.Cell>
-					<Table.Cell>{h.securitySymbol}</Table.Cell>
+					<Table.Cell class="font-mono">{h.securitySymbol}</Table.Cell>
 					<Table.Cell class="text-right">{h.shares}</Table.Cell>
 					<Table.Cell class="text-right">{h.basis}</Table.Cell>
 					<Table.Cell class="text-right">

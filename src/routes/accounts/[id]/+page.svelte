@@ -27,7 +27,7 @@
 		<Table.Body>
 			{#each data.holdings as h (h.id)}
 				<Table.Row>
-					<Table.Cell class="font-medium">{h.symbol}</Table.Cell>
+					<Table.Cell class="font-mono">{h.symbol}</Table.Cell>
 					<Table.Cell class="text-muted-foreground">{h.fullName ?? '—'}</Table.Cell>
 					<Table.Cell class="text-right">{h.shares ?? '—'}</Table.Cell>
 					<Table.Cell class="text-right"
