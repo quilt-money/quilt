@@ -7,6 +7,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { enhance } from '$app/forms';
 	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 
 	let { data } = $props();
 
@@ -24,9 +25,12 @@
 </script>
 
 <div class="p-6">
-	<div class="flex justify-end mb-4">
-		<Button onclick={() => (open = true)}>Create holding</Button>
-	</div>
+	<PageHeader>
+		{#snippet actions()}
+			<Button onclick={() => (open = true)}>Create holding</Button>
+		{/snippet}
+		<h1 class="text-2xl font-semibold">Holdings</h1>
+	</PageHeader>
 
 	<Table.Root>
 		<Table.Header>

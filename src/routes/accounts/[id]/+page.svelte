@@ -1,14 +1,19 @@
 <script lang="ts">
+	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 
 	let { data } = $props();
 </script>
 
 <div class="p-6">
-	<div class="mb-6">
+	<PageHeader>
+		{#snippet actions()}
+			<Button>Upload</Button>
+		{/snippet}
 		<h1 class="text-2xl font-semibold">{data.account.name}</h1>
 		<p class="text-sm text-muted-foreground">{data.account.owner}</p>
-	</div>
+	</PageHeader>
 
 	<Table.Root>
 		<Table.Header>
@@ -25,7 +30,9 @@
 					<Table.Cell class="font-medium">{h.symbol}</Table.Cell>
 					<Table.Cell class="text-muted-foreground">{h.fullName ?? '—'}</Table.Cell>
 					<Table.Cell class="text-right">{h.shares ?? '—'}</Table.Cell>
-					<Table.Cell class="text-right">{h.basis != null ? `$${h.basis.toLocaleString()}` : '—'}</Table.Cell>
+					<Table.Cell class="text-right"
+						>{h.basis != null ? `$${h.basis.toLocaleString()}` : '—'}</Table.Cell
+					>
 				</Table.Row>
 			{:else}
 				<Table.Row>

@@ -1,10 +1,15 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 
 	let { data } = $props();
 </script>
 
 <div class="p-6">
+	<PageHeader>
+		<h1 class="text-2xl font-semibold">Securities</h1>
+	</PageHeader>
+
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>
