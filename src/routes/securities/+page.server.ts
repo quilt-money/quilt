@@ -43,16 +43,17 @@ export const actions = {
 		const symbol = data.get('symbol')?.toString().trim().toUpperCase();
 		const fullName = data.get('fullName')?.toString().trim() || null;
 		const categoryId = data.get('categoryId')?.toString() || null;
-		const typeId = data.get('typeId')?.toString();
+		const typeId = data.get('typeId')?.toString() || null;
 		const sectorId = data.get('sectorId')?.toString() || null;
 		const industryId = data.get('industryId')?.toString() || null;
-		const regionId = data.get('regionId')?.toString();
+		const regionId = data.get('regionId')?.toString() || null;
 
 		if (!symbol) return fail(400, { error: 'Symbol is required' });
-		if (!typeId) return fail(400, { error: 'Type is required' });
-		if (!regionId) return fail(400, { error: 'Region is required' });
 
-		const [existing] = await db.select({ id: security.id }).from(security).where(eq(security.symbol, symbol));
+		const [existing] = await db
+			.select({ id: security.id })
+			.from(security)
+			.where(eq(security.symbol, symbol));
 		if (existing) return fail(400, { error: `${symbol} already exists` });
 
 		await db.insert(security).values({

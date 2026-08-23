@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "cdc0b7eb-2fbe-4f59-a736-b5c9509be370",
+  "id": "1be59ff5-12c7-4490-9fc3-1b8ac5e76254",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -503,7 +503,7 @@
           "name": "type_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "sector_id": {
@@ -524,7 +524,7 @@
           "name": "region_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },

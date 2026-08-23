@@ -43,14 +43,10 @@ export const security = sqliteTable('security', {
 	symbol: text('symbol').notNull().unique(),
 	fullName: text('full_name'),
 	categoryId: text('category_id').references(() => category.id),
-	typeId: text('type_id')
-		.notNull()
-		.references(() => securityType.id),
+	typeId: text('type_id').references(() => securityType.id),
 	sectorId: text('sector_id').references(() => sector.id),
 	industryId: text('industry_id').references(() => industry.id),
-	regionId: text('region_id')
-		.notNull()
-		.references(() => region.id)
+	regionId: text('region_id').references(() => region.id)
 });
 
 export const account = sqliteTable('account', {

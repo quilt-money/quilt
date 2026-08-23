@@ -18,14 +18,6 @@
 	let industryId = $state('');
 	let regionId = $state('');
 
-	$effect(() => {
-		if (data.securityTypes.length && !typeId) typeId = data.securityTypes[0].id;
-	});
-
-	$effect(() => {
-		if (data.regions.length && !regionId) regionId = data.regions[0].id;
-	});
-
 	function resetForm() {
 		symbol = '';
 		fullName = '';
@@ -102,7 +94,12 @@
 					</div>
 					<div class="grid gap-2">
 						<Label for="fullName">Name</Label>
-						<Input id="fullName" name="fullName" bind:value={fullName} placeholder="e.g. Apple Inc." />
+						<Input
+							id="fullName"
+							name="fullName"
+							bind:value={fullName}
+							placeholder="e.g. Apple Inc."
+						/>
 					</div>
 					<div class="grid gap-2">
 						<Label for="typeId">Type</Label>
@@ -112,6 +109,7 @@
 							bind:value={typeId}
 							class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 						>
+							<option value="">—</option>
 							{#each data.securityTypes as t (t.id)}
 								<option value={t.id}>{t.name}</option>
 							{/each}
@@ -125,6 +123,7 @@
 							bind:value={regionId}
 							class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 						>
+							<option value="">—</option>
 							{#each data.regions as r (r.id)}
 								<option value={r.id}>{r.name}</option>
 							{/each}
