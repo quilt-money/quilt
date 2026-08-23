@@ -3,14 +3,7 @@ import { account } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { parse } from 'csv/sync';
-
-const CSV_SCHEMA = ['Symbol', 'Name', 'Shares', 'Basis'];
-
-function isValidHeader(header: string[]): boolean {
-	return (
-		header.length === CSV_SCHEMA.length && CSV_SCHEMA.every((column) => header.includes(column))
-	);
-}
+import { HOLDINGS_CSV_HEADER, isValidCsvHeader } from '$lib/holdings-csv';
 
 export async function load({ params }) {
 	const [acct] = await db.select().from(account).where(eq(account.id, params.id)).limit(1);
@@ -31,9 +24,9 @@ export const actions = {
 		const text = await file.text();
 		const [header] = parse(text, { to_line: 1 }) as string[][];
 
-		if (!header || !isValidHeader(header)) {
+		if (!header || !isValidCsvHeader(header)) {
 			return fail(400, {
-				message: `CSV must have exactly these headers: ${CSV_SCHEMA.join(', ')}`
+				message: `CSV must have exactly these headers: ${HOLDINGS_CSV_HEADER.join(', ')}`
 			});
 		}
 

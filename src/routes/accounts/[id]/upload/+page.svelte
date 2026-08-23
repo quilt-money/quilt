@@ -4,6 +4,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { enhance } from '$app/forms';
+	import { diffCsvHeader } from '$lib/holdings-csv';
 
 	let { data, form } = $props();
 
@@ -55,6 +56,12 @@
 	}
 
 	const csv = $derived(parseCsvPreview(csvText));
+	const headerIssues = $derived(diffCsvHeader(csv.header));
+	const hasHeaderError = $derived(headerIssues.missing.length > 0 || headerIssues.extra.length > 0);
+
+	const canProceed = $derived(
+		stepValue === 'upload' ? !!selectedFile : stepValue === 'preview' ? !hasHeaderError : true
+	);
 
 	function isCsv(file: File) {
 		return file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv';
@@ -148,6 +155,19 @@
 				{/if}
 			</div>
 		{:else if stepValue === 'preview'}
+			{#if hasHeaderError}
+				<div
+					class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
+				>
+					<p class="font-medium">This CSV doesn't match the expected columns.</p>
+					{#if headerIssues.missing.length}
+						<p>Missing: {headerIssues.missing.join(', ')}</p>
+					{/if}
+					{#if headerIssues.extra.length}
+						<p>Unexpected: {headerIssues.extra.join(', ')}</p>
+					{/if}
+				</div>
+			{/if}
 			<div class="max-h-96 overflow-auto rounded-lg border">
 				<Table.Root>
 					<Table.Header>
@@ -188,7 +208,7 @@
 				<Button type="button" variant="outline" onclick={goBack}>Back</Button>
 			{/if}
 			{#if stepValue !== 'submit'}
-				<Button type="button" onclick={goNext} disabled={!selectedFile}>Next</Button>
+				<Button type="button" onclick={goNext} disabled={!canProceed}>Next</Button>
 			{:else}
 				<Button type="submit">Submit</Button>
 			{/if}
