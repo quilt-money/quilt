@@ -66,6 +66,17 @@ const EMERGING_COUNTRIES = new Set([
 	'CZ'
 ]);
 
+export function normalizeCompanyName(name: string): string {
+	const trimmed = name.trim().replace(/\s+/g, ' ');
+	const isAllCaps = trimmed === trimmed.toUpperCase() && trimmed !== trimmed.toLowerCase();
+	if (!isAllCaps) return trimmed;
+	return trimmed
+		.toLowerCase()
+		.split(' ')
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+}
+
 export function regionBucketFor(country: string | null): string {
 	if (country === 'US') return 'US';
 	if (country && DEVELOPED_COUNTRIES.has(country)) return 'International Developed';

@@ -4,7 +4,12 @@ import { latestPriceSql } from '$lib/server/db/queries/latestPriceSql';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { FMP_SECTOR_TO_GICS, fetchFmpProfile, regionBucketFor } from '$lib/server/fmp';
+import {
+	FMP_SECTOR_TO_GICS,
+	fetchFmpProfile,
+	normalizeCompanyName,
+	regionBucketFor
+} from '$lib/server/fmp';
 
 export async function load() {
 	const securities = await db
@@ -101,7 +106,7 @@ export const actions = {
 			await db
 				.update(security)
 				.set({
-					fullName: profile.companyName || undefined,
+					fullName: profile.companyName ? normalizeCompanyName(profile.companyName) : undefined,
 					typeId: typeIdByName.get(typeName),
 					sectorId: gicsSector ? sectorIdByName.get(gicsSector) : undefined,
 					regionId: regionIdByName.get(regionName)
