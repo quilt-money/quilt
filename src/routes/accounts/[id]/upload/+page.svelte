@@ -224,9 +224,9 @@
 				>
 					<CircleCheckIcon class="mx-auto mb-2 size-6" />
 					<p class="font-medium">Upload complete</p>
-					<div class="mt-3 space-y-3 text-sm text-foreground">
+					<div class="mt-3 space-y-3 text-foreground">
 						<div>
-							<p>
+							<p class="font-semibold">
 								{uploadResult.securitiesInserted}
 								{uploadResult.securitiesInserted === 1 ? 'security' : 'securities'} added
 							</p>
@@ -243,7 +243,7 @@
 							{/if}
 						</div>
 						<div>
-							<p>
+							<p class="font-semibold">
 								{uploadResult.securitiesExisting}
 								{uploadResult.securitiesExisting === 1 ? 'security' : 'securities'} already existed
 							</p>
@@ -259,7 +259,7 @@
 								</ul>
 							{/if}
 						</div>
-						<p>
+						<p class="font-semibold">
 							{uploadResult.holdingsUploaded}
 							{uploadResult.holdingsUploaded === 1 ? 'holding row' : 'holding rows'} uploaded
 						</p>
