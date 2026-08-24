@@ -52,8 +52,7 @@ export const holding = sqliteTable(
 		securityId: text('security_id')
 			.notNull()
 			.references(() => security.id, { onDelete: 'cascade' }),
-		shares: real('shares'),
-		basis: real('basis')
+		shares: real('shares')
 	},
 	(t) => [unique().on(t.accountId, t.securityId)]
 );

@@ -1,4 +1,4 @@
-export const HOLDINGS_CSV_HEADER = ['Symbol', 'Name', 'Shares', 'Basis'];
+export const HOLDINGS_CSV_HEADER = ['Symbol', 'Name', 'Shares'];
 
 export function diffCsvHeader(header: string[]) {
 	const missing = HOLDINGS_CSV_HEADER.filter((column) => !header.includes(column));

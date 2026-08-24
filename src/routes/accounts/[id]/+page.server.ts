@@ -11,7 +11,6 @@ export async function load({ params }) {
 		.select({
 			id: holding.id,
 			shares: holding.shares,
-			basis: holding.basis,
 			symbol: security.symbol,
 			fullName: security.fullName
 		})
