@@ -14,7 +14,6 @@
 	let accountId = $state('');
 	let securityId = $state('');
 	let shares = $state('');
-	let basis = $state('');
 
 	$effect(() => {
 		if (data.accounts.length && !accountId) accountId = data.accounts[0].id;
@@ -49,7 +48,6 @@
 				<Table.Head>Account</Table.Head>
 				<Table.Head>Symbol</Table.Head>
 				<Table.Head class="text-right">Shares</Table.Head>
-				<Table.Head class="text-right">Basis</Table.Head>
 				<Table.Head class="w-10"></Table.Head>
 			</Table.Row>
 		</Table.Header>
@@ -59,7 +57,6 @@
 					<Table.Cell>{h.accountName}</Table.Cell>
 					<Table.Cell class="font-mono">{h.securitySymbol}</Table.Cell>
 					<Table.Cell class="text-right">{h.shares}</Table.Cell>
-					<Table.Cell class="text-right">{h.basis}</Table.Cell>
 				</Table.Row>
 			{/each}
 		</Table.Body>
@@ -84,7 +81,6 @@
 							open = false;
 							securityId = data.securities[0]?.id ?? '';
 							shares = '';
-							basis = '';
 						}
 						update();
 					};
@@ -126,18 +122,6 @@
 							step="any"
 							bind:value={shares}
 							placeholder="0"
-							required
-						/>
-					</div>
-					<div class="grid gap-2">
-						<Label for="basis">Basis</Label>
-						<Input
-							id="basis"
-							name="basis"
-							type="number"
-							step="any"
-							bind:value={basis}
-							placeholder="0.00"
 							required
 						/>
 					</div>

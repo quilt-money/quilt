@@ -8,7 +8,6 @@ export async function load() {
 		.select({
 			id: holding.id,
 			shares: holding.shares,
-			basis: holding.basis,
 			accountId: holding.accountId,
 			accountName: account.name,
 			securityId: holding.securityId,
@@ -38,13 +37,11 @@ export const actions = {
 		const accountId = data.get('accountId')?.toString();
 		const securityId = data.get('securityId')?.toString();
 		const shares = parseFloat(data.get('shares')?.toString() ?? '');
-		const basis = parseFloat(data.get('basis')?.toString() ?? '');
 
 		if (!accountId) return fail(400, { error: 'Account is required' });
 		if (!securityId) return fail(400, { error: 'Security is required' });
 		if (isNaN(shares)) return fail(400, { error: 'Shares is required' });
-		if (isNaN(basis)) return fail(400, { error: 'Basis is required' });
 
-		await db.insert(holding).values({ accountId, securityId, shares, basis });
+		await db.insert(holding).values({ accountId, securityId, shares });
 	}
 };
