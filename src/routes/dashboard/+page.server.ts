@@ -1,21 +1,9 @@
-import { db } from '$lib/server/db';
-import { holding, security, sector } from '$lib/server/db/schema';
-import { latestPriceSql } from '$lib/server/db/queries/latestPriceSql';
-import { eq, sql } from 'drizzle-orm';
+import { getHoldingValuesBySector } from '$lib/server/db/queries/dashboard';
 
 const MAX_SECTOR_SLICES = 7;
 
 export async function load() {
-	const latestPrice = latestPriceSql();
-
-	const rows = await db
-		.select({
-			sectorName: sector.name,
-			value: sql<number | null>`${holding.shares} * (${latestPrice})`
-		})
-		.from(holding)
-		.innerJoin(security, eq(holding.securityId, security.id))
-		.leftJoin(sector, eq(security.sectorId, sector.id));
+	const rows = await getHoldingValuesBySector();
 
 	const totals = new Map<string, number>();
 	for (const row of rows) {
