@@ -8,6 +8,13 @@
       "when": 1787515400609,
       "tag": "0000_squashed",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787525766898,
+      "tag": "0001_loose_cable",
+      "breakpoints": true
     }
   ]
 }

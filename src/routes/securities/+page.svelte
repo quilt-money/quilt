@@ -32,19 +32,15 @@
 	let open = $state(false);
 	let symbol = $state('');
 	let fullName = $state('');
-	let categoryId = $state('');
 	let typeId = $state('');
 	let sectorId = $state('');
-	let industryId = $state('');
 	let regionId = $state('');
 
 	function resetForm() {
 		symbol = '';
 		fullName = '';
-		categoryId = '';
 		typeId = data.securityTypes[0]?.id ?? '';
 		sectorId = '';
-		industryId = '';
 		regionId = data.regions[0]?.id ?? '';
 	}
 </script>
@@ -80,10 +76,9 @@
 					</Table.Head>
 					<Table.Head>Symbol</Table.Head>
 					<Table.Head>Name</Table.Head>
-					<Table.Head>Category</Table.Head>
+					<Table.Head>Latest price</Table.Head>
 					<Table.Head>Type</Table.Head>
 					<Table.Head>Sector</Table.Head>
-					<Table.Head>Industry</Table.Head>
 					<Table.Head>Region</Table.Head>
 				</Table.Row>
 			</Table.Header>
@@ -101,10 +96,9 @@
 						</Table.Cell>
 						<Table.Cell class="font-mono">{s.symbol}</Table.Cell>
 						<Table.Cell>{s.fullName ?? '—'}</Table.Cell>
-						<Table.Cell>{s.category ?? '—'}</Table.Cell>
+						<Table.Cell>{s.latestPrice != null ? `$${s.latestPrice.toFixed(2)}` : '—'}</Table.Cell>
 						<Table.Cell>{s.type ?? '—'}</Table.Cell>
 						<Table.Cell>{s.sector ?? '—'}</Table.Cell>
-						<Table.Cell>{s.industry ?? '—'}</Table.Cell>
 						<Table.Cell>{s.region ?? '—'}</Table.Cell>
 					</Table.Row>
 				{/each}
@@ -178,20 +172,6 @@
 						</select>
 					</div>
 					<div class="grid gap-2">
-						<Label for="categoryId">Category</Label>
-						<select
-							id="categoryId"
-							name="categoryId"
-							bind:value={categoryId}
-							class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-						>
-							<option value="">—</option>
-							{#each data.categories as c (c.id)}
-								<option value={c.id}>{c.name}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="grid gap-2">
 						<Label for="sectorId">Sector</Label>
 						<select
 							id="sectorId"
@@ -202,20 +182,6 @@
 							<option value="">—</option>
 							{#each data.sectors as s (s.id)}
 								<option value={s.id}>{s.name}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="grid gap-2">
-						<Label for="industryId">Industry</Label>
-						<select
-							id="industryId"
-							name="industryId"
-							bind:value={industryId}
-							class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-						>
-							<option value="">—</option>
-							{#each data.industries as i (i.id)}
-								<option value={i.id}>{i.name}</option>
 							{/each}
 						</select>
 					</div>

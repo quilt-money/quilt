@@ -1,6 +1,5 @@
 // FMP's sector taxonomy doesn't match the GICS sector names seeded in this app,
-// so map its ~11 sector names onto our GICS sectors. FMP's industry field is far
-// more granular than our GICS industries and doesn't map cleanly, so it's left alone.
+// so map its ~11 sector names onto our GICS sectors.
 export const FMP_SECTOR_TO_GICS: Record<string, string> = {
 	'Basic Materials': 'Materials',
 	'Communication Services': 'Communication Services',

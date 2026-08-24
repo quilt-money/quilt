@@ -7,22 +7,7 @@ export const sector = sqliteTable('sector', {
 	name: text('name').notNull().unique()
 });
 
-export const industry = sqliteTable('industry', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	name: text('name').notNull().unique(),
-	sectorId: text('sector_id').references(() => sector.id)
-});
-
 export const region = sqliteTable('region', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	name: text('name').notNull().unique()
-});
-
-export const category = sqliteTable('category', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -42,10 +27,8 @@ export const security = sqliteTable('security', {
 		.$defaultFn(() => crypto.randomUUID()),
 	symbol: text('symbol').notNull().unique(),
 	fullName: text('full_name'),
-	categoryId: text('category_id').references(() => category.id),
 	typeId: text('type_id').references(() => securityType.id),
 	sectorId: text('sector_id').references(() => sector.id),
-	industryId: text('industry_id').references(() => industry.id),
 	regionId: text('region_id').references(() => region.id)
 });
 
