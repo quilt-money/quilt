@@ -72,7 +72,7 @@ export const actions = {
 				if (!sec) {
 					sec = tx
 						.insert(security)
-						.values({ symbol: row.symbol, fullName: row.fullName })
+						.values({ symbol: row.symbol })
 						.returning({ id: security.id })
 						.get();
 				}
