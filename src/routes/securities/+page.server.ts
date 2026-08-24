@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db';
 import { security, securityType, sector, region, priceSnapshot } from '$lib/server/db/schema';
-import { asc, eq, inArray, sql } from 'drizzle-orm';
+import { latestPriceSql } from '$lib/server/db/queries/latestPriceSql';
+import { asc, eq, inArray } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { FMP_SECTOR_TO_GICS, fetchFmpProfile, regionBucketFor } from '$lib/server/fmp';
@@ -14,12 +15,7 @@ export async function load() {
 			type: securityType.name,
 			sector: sector.name,
 			region: region.name,
-			latestPrice: sql<number | null>`(
-				select ${priceSnapshot.price} from ${priceSnapshot}
-				where ${priceSnapshot.securityId} = ${security.id}
-				order by ${priceSnapshot.snapshotDate} desc
-				limit 1
-			)`
+			latestPrice: latestPriceSql()
 		})
 		.from(security)
 		.leftJoin(securityType, eq(security.typeId, securityType.id))
