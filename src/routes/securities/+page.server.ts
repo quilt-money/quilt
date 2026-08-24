@@ -99,8 +99,10 @@ export const actions = {
 			}
 			if (!profile) continue;
 
+			const isFundOrEtf = profile.isEtf || profile.isFund;
 			const typeName = profile.isEtf ? 'ETF' : profile.isFund ? 'Mutual Fund' : 'Stock';
-			const gicsSector = profile.sector ? FMP_SECTOR_TO_GICS[profile.sector] : undefined;
+			const gicsSector =
+				!isFundOrEtf && profile.sector ? FMP_SECTOR_TO_GICS[profile.sector] : undefined;
 			const regionName = regionBucketFor(profile.country);
 
 			await db
@@ -108,7 +110,7 @@ export const actions = {
 				.set({
 					fullName: profile.companyName ? normalizeCompanyName(profile.companyName) : undefined,
 					typeId: typeIdByName.get(typeName),
-					sectorId: gicsSector ? sectorIdByName.get(gicsSector) : undefined,
+					sectorId: isFundOrEtf ? null : gicsSector ? sectorIdByName.get(gicsSector) : undefined,
 					regionId: regionIdByName.get(regionName)
 				})
 				.where(eq(security.id, s.id));
