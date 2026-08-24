@@ -58,8 +58,7 @@ export const actions = {
 			rows.push({ symbol, fullName: row.Name?.trim() || null, shares });
 		}
 
-		let securitiesInserted = 0;
-		let securitiesExisting = 0;
+		const uploadedSecurities: { symbol: string; isNew: boolean }[] = [];
 
 		db.transaction((tx) => {
 			for (const row of rows) {
@@ -69,16 +68,15 @@ export const actions = {
 					.where(eq(security.symbol, row.symbol))
 					.get();
 
-				if (sec) {
-					securitiesExisting++;
-				} else {
+				const isNew = !sec;
+				if (!sec) {
 					sec = tx
 						.insert(security)
 						.values({ symbol: row.symbol, fullName: row.fullName })
 						.returning({ id: security.id })
 						.get();
-					securitiesInserted++;
 				}
+				uploadedSecurities.push({ symbol: row.symbol, isNew });
 
 				tx.insert(holding)
 					.values({
@@ -96,8 +94,9 @@ export const actions = {
 
 		return {
 			success: true,
-			securitiesInserted,
-			securitiesExisting,
+			securities: uploadedSecurities,
+			securitiesInserted: uploadedSecurities.filter((s) => s.isNew).length,
+			securitiesExisting: uploadedSecurities.filter((s) => !s.isNew).length,
 			holdingsUploaded: rows.length
 		};
 	}

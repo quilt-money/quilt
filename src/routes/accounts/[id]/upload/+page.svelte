@@ -224,20 +224,46 @@
 				>
 					<CircleCheckIcon class="mx-auto mb-2 size-6" />
 					<p class="font-medium">Upload complete</p>
-					<ul class="mt-3 space-y-1 text-sm text-foreground">
-						<li>
-							{uploadResult.securitiesInserted}
-							{uploadResult.securitiesInserted === 1 ? 'security' : 'securities'} added
-						</li>
-						<li>
-							{uploadResult.securitiesExisting}
-							{uploadResult.securitiesExisting === 1 ? 'security' : 'securities'} already existed
-						</li>
-						<li>
+					<div class="mt-3 space-y-3 text-sm text-foreground">
+						<div>
+							<p>
+								{uploadResult.securitiesInserted}
+								{uploadResult.securitiesInserted === 1 ? 'security' : 'securities'} added
+							</p>
+							{#if uploadResult.securitiesInserted > 0}
+								<ul class="mt-2 flex flex-wrap justify-center gap-2">
+									{#each uploadResult.securities.filter((s) => s.isNew) as sec (sec.symbol)}
+										<li
+											class="rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-foreground"
+										>
+											{sec.symbol}
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
+						<div>
+							<p>
+								{uploadResult.securitiesExisting}
+								{uploadResult.securitiesExisting === 1 ? 'security' : 'securities'} already existed
+							</p>
+							{#if uploadResult.securitiesExisting > 0}
+								<ul class="mt-2 flex flex-wrap justify-center gap-2">
+									{#each uploadResult.securities.filter((s) => !s.isNew) as sec (sec.symbol)}
+										<li
+											class="rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-foreground"
+										>
+											{sec.symbol}
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
+						<p>
 							{uploadResult.holdingsUploaded}
 							{uploadResult.holdingsUploaded === 1 ? 'holding row' : 'holding rows'} uploaded
-						</li>
-					</ul>
+						</p>
+					</div>
 				</div>
 			{:else}
 				<div class="rounded-lg border p-6 text-center">
