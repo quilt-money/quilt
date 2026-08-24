@@ -13,12 +13,6 @@ CREATE TABLE `account_tag` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `account_tag_account_id_tag_id_unique` ON `account_tag` (`account_id`,`tag_id`);--> statement-breakpoint
-CREATE TABLE `category` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `category_name_unique` ON `category` (`name`);--> statement-breakpoint
 CREATE TABLE `holding` (
 	`id` text PRIMARY KEY NOT NULL,
 	`account_id` text NOT NULL,
@@ -30,14 +24,6 @@ CREATE TABLE `holding` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `holding_account_id_security_id_unique` ON `holding` (`account_id`,`security_id`);--> statement-breakpoint
-CREATE TABLE `industry` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL,
-	`sector_id` text,
-	FOREIGN KEY (`sector_id`) REFERENCES `sector`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `industry_name_unique` ON `industry` (`name`);--> statement-breakpoint
 CREATE TABLE `price_basis` (
 	`id` text PRIMARY KEY NOT NULL,
 	`account_id` text NOT NULL,
@@ -73,15 +59,11 @@ CREATE TABLE `security` (
 	`id` text PRIMARY KEY NOT NULL,
 	`symbol` text NOT NULL,
 	`full_name` text,
-	`category_id` text,
 	`type_id` text,
 	`sector_id` text,
-	`industry_id` text,
 	`region_id` text,
-	FOREIGN KEY (`category_id`) REFERENCES `category`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`type_id`) REFERENCES `security_type`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`sector_id`) REFERENCES `sector`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`industry_id`) REFERENCES `industry`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`region_id`) REFERENCES `region`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
