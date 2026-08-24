@@ -1,7 +1,6 @@
 import { db } from '$lib/server/db';
 import { holding, account, security } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { fail } from '@sveltejs/kit';
 
 export async function load() {
 	const holdings = await db
@@ -30,18 +29,3 @@ export async function load() {
 
 	return { holdings, accounts, securities };
 }
-
-export const actions = {
-	create: async ({ request }) => {
-		const data = await request.formData();
-		const accountId = data.get('accountId')?.toString();
-		const securityId = data.get('securityId')?.toString();
-		const shares = parseFloat(data.get('shares')?.toString() ?? '');
-
-		if (!accountId) return fail(400, { error: 'Account is required' });
-		if (!securityId) return fail(400, { error: 'Security is required' });
-		if (isNaN(shares)) return fail(400, { error: 'Shares is required' });
-
-		await db.insert(holding).values({ accountId, securityId, shares });
-	}
-};
