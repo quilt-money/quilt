@@ -26,6 +26,7 @@
 				<Table.Head>Symbol</Table.Head>
 				<Table.Head>Name</Table.Head>
 				<Table.Head class="text-right">Shares</Table.Head>
+				<Table.Head class="text-right">Current value</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
@@ -34,10 +35,15 @@
 					<Table.Cell class="font-mono">{h.symbol}</Table.Cell>
 					<Table.Cell class="text-muted-foreground">{h.fullName ?? '—'}</Table.Cell>
 					<Table.Cell class="text-right">{h.shares ?? '—'}</Table.Cell>
+					<Table.Cell class="text-right"
+						>{h.currentValue != null
+							? `$${h.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+							: '—'}</Table.Cell
+					>
 				</Table.Row>
 			{:else}
 				<Table.Row>
-					<Table.Cell colspan={3} class="text-center text-muted-foreground py-8">
+					<Table.Cell colspan={4} class="text-center text-muted-foreground py-8">
 						No holdings yet.
 					</Table.Cell>
 				</Table.Row>
