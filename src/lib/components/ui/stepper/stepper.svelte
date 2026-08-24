@@ -35,7 +35,7 @@
 		return index < currentIndex ? 'completed' : 'inactive';
 	}
 
-	let triggers: HTMLButtonElement[] = [];
+	let triggers: HTMLButtonElement[] = $state([]);
 
 	function focusTrigger(index: number) {
 		const len = triggers.length;
