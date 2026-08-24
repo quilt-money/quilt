@@ -5,13 +5,12 @@ import { error, fail } from '@sveltejs/kit';
 import { parse } from 'csv/sync';
 import { HOLDINGS_CSV_HEADER, isValidCsvHeader } from '$lib/holdings-csv';
 
-type CsvRow = { Symbol: string; Name: string; Shares: string; Basis: string };
+type CsvRow = { Symbol: string; Name: string; Shares: string };
 
 type HoldingRow = {
 	symbol: string;
 	fullName: string | null;
 	shares: number | null;
-	basis: number | null;
 };
 
 export async function load({ params }) {
@@ -50,18 +49,13 @@ export const actions = {
 			if (!symbol) return fail(400, { message: `Row ${line}: Symbol is required` });
 
 			const sharesRaw = row.Shares?.trim();
-			const basisRaw = row.Basis?.trim();
 			const shares = sharesRaw ? Number(sharesRaw) : null;
-			const basis = basisRaw ? Number(basisRaw) : null;
 
 			if (shares !== null && Number.isNaN(shares)) {
 				return fail(400, { message: `Row ${line}: Shares must be a number` });
 			}
-			if (basis !== null && Number.isNaN(basis)) {
-				return fail(400, { message: `Row ${line}: Basis must be a number` });
-			}
 
-			rows.push({ symbol, fullName: row.Name?.trim() || null, shares, basis });
+			rows.push({ symbol, fullName: row.Name?.trim() || null, shares });
 		}
 
 		let securitiesInserted = 0;
@@ -90,12 +84,11 @@ export const actions = {
 					.values({
 						accountId: params.id,
 						securityId: sec.id,
-						shares: row.shares,
-						basis: row.basis
+						shares: row.shares
 					})
 					.onConflictDoUpdate({
 						target: [holding.accountId, holding.securityId],
-						set: { shares: row.shares, basis: row.basis }
+						set: { shares: row.shares }
 					})
 					.run();
 			}
