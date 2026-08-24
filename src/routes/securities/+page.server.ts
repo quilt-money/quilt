@@ -1,14 +1,6 @@
 import { db } from '$lib/server/db';
-import {
-	security,
-	category,
-	securityType,
-	sector,
-	industry,
-	region,
-	priceSnapshot
-} from '$lib/server/db/schema';
-import { asc, eq, inArray } from 'drizzle-orm';
+import { security, securityType, sector, region, priceSnapshot } from '$lib/server/db/schema';
+import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { FMP_SECTOR_TO_GICS, fetchFmpProfile, regionBucketFor } from '$lib/server/fmp';
@@ -19,32 +11,32 @@ export async function load() {
 			id: security.id,
 			symbol: security.symbol,
 			fullName: security.fullName,
-			category: category.name,
 			type: securityType.name,
 			sector: sector.name,
-			industry: industry.name,
-			region: region.name
+			region: region.name,
+			latestPrice: sql<number | null>`(
+				select ${priceSnapshot.price} from ${priceSnapshot}
+				where ${priceSnapshot.securityId} = ${security.id}
+				order by ${priceSnapshot.snapshotDate} desc
+				limit 1
+			)`
 		})
 		.from(security)
-		.leftJoin(category, eq(security.categoryId, category.id))
 		.leftJoin(securityType, eq(security.typeId, securityType.id))
 		.leftJoin(sector, eq(security.sectorId, sector.id))
-		.leftJoin(industry, eq(security.industryId, industry.id))
 		.leftJoin(region, eq(security.regionId, region.id))
 		.orderBy(asc(security.symbol));
 
-	const [categories, securityTypes, sectors, industries, regions] = await Promise.all([
-		db.select({ id: category.id, name: category.name }).from(category).orderBy(category.name),
+	const [securityTypes, sectors, regions] = await Promise.all([
 		db
 			.select({ id: securityType.id, name: securityType.name })
 			.from(securityType)
 			.orderBy(securityType.name),
 		db.select({ id: sector.id, name: sector.name }).from(sector).orderBy(sector.name),
-		db.select({ id: industry.id, name: industry.name }).from(industry).orderBy(industry.name),
 		db.select({ id: region.id, name: region.name }).from(region).orderBy(region.name)
 	]);
 
-	return { securities, categories, securityTypes, sectors, industries, regions };
+	return { securities, securityTypes, sectors, regions };
 }
 
 export const actions = {
@@ -52,10 +44,8 @@ export const actions = {
 		const data = await request.formData();
 		const symbol = data.get('symbol')?.toString().trim().toUpperCase();
 		const fullName = data.get('fullName')?.toString().trim() || null;
-		const categoryId = data.get('categoryId')?.toString() || null;
 		const typeId = data.get('typeId')?.toString() || null;
 		const sectorId = data.get('sectorId')?.toString() || null;
-		const industryId = data.get('industryId')?.toString() || null;
 		const regionId = data.get('regionId')?.toString() || null;
 
 		if (!symbol) return fail(400, { error: 'Symbol is required' });
@@ -69,10 +59,8 @@ export const actions = {
 		await db.insert(security).values({
 			symbol,
 			fullName,
-			categoryId,
 			typeId,
 			sectorId,
-			industryId,
 			regionId
 		});
 	},
