@@ -4,8 +4,9 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { enhance } from '$app/forms';
-	import { diffCsvHeader } from '$lib/holdings-csv';
+	import { diffCsvHeader, HOLDINGS_CSV_HEADER } from '$lib/holdings-csv';
 	import CircleCheckIcon from '@lucide/svelte/icons/circle-check';
+	import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 
 	let { data, form } = $props();
@@ -142,6 +143,12 @@
 
 		{#if stepValue === 'upload'}
 			<div
+				class="mb-4 flex items-center gap-2 rounded-lg border bg-muted p-4 text-sm text-muted-foreground"
+			>
+				<CircleAlertIcon class="size-4 shrink-0" />
+				Expected columns: {HOLDINGS_CSV_HEADER.join(', ')}
+			</div>
+			<div
 				role="button"
 				tabindex="0"
 				class="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-10 text-center transition-colors {isDragging
@@ -194,7 +201,7 @@
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
-							{#each csv.header as col (col)}
+							{#each csv.header as col, i (i)}
 								<Table.Head>{col}</Table.Head>
 							{/each}
 						</Table.Row>
