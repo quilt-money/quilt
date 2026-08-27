@@ -53,6 +53,7 @@
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.3.1",
+		"@tanstack/svelte-table": "^9.2.3",
 		"better-sqlite3": "^12.10.0",
 		"csv": "^6.6.3",
 		"echarts": "^6.1.0",
