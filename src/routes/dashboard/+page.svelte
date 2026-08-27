@@ -1,9 +1,20 @@
 <script lang="ts">
-	import type { EChartsOption } from 'echarts';
+	import type { EChartsOption, ECElementEvent } from 'echarts';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EChart from '$lib/components/EChart.svelte';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Table from '$lib/components/ui/table/index.js';
 
 	let { data } = $props();
+
+	let selectedCategory = $state<string | null>(null);
+	const selectedSecurities = $derived(
+		selectedCategory ? (data.categorySecurities[selectedCategory] ?? []) : []
+	);
+
+	function handleItemClick(params: ECElementEvent) {
+		if (typeof params.seriesName === 'string') selectedCategory = params.seriesName;
+	}
 
 	// Validated 8-hue categorical order — see dataviz skill references/palette.md.
 	// Fixed order is the CVD-safety mechanism; never reorder or cycle it.
@@ -86,9 +97,42 @@
 
 		<p class="mt-8 mb-2 text-sm text-muted-foreground">Value by sector</p>
 		{#if data.valueBySector.length > 0}
-			<EChart {option} height="120px" />
+			<EChart {option} height="120px" onItemClick={handleItemClick} />
 		{:else}
 			<p class="py-8 text-center text-sm text-muted-foreground">No holdings yet.</p>
 		{/if}
 	</div>
 </div>
+
+<Dialog.Root
+	open={selectedCategory !== null}
+	onOpenChange={(open) => !open && (selectedCategory = null)}
+>
+	<Dialog.Portal>
+		<Dialog.Overlay />
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{selectedCategory}</Dialog.Title>
+			</Dialog.Header>
+
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>Symbol</Table.Head>
+						<Table.Head>Name</Table.Head>
+						<Table.Head class="text-right">Value</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each selectedSecurities as s (s.symbol)}
+						<Table.Row>
+							<Table.Cell class="font-mono">{s.symbol}</Table.Cell>
+							<Table.Cell>{s.fullName ?? '—'}</Table.Cell>
+							<Table.Cell class="text-right">{formatUsd(s.value)}</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>
