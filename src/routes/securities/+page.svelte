@@ -35,7 +35,6 @@
 	const columns: DataTableColumn<SecurityRow>[] = [
 		{
 			id: 'select',
-			headerClass: 'w-10',
 			header: () =>
 				renderComponent(Checkbox, {
 					checked: allSelected,

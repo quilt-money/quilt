@@ -15,8 +15,7 @@
 	const columns: DataTableColumn<(typeof data.holdings)[number]>[] = [
 		{ accessorKey: 'accountName', header: 'Account' },
 		{ accessorKey: 'securitySymbol', header: 'Symbol', cellClass: 'font-mono' },
-		{ accessorKey: 'shares', header: 'Shares', class: 'text-right' },
-		{ id: 'actions', headerClass: 'w-10' }
+		{ accessorKey: 'shares', header: 'Shares' }
 	];
 </script>
 
