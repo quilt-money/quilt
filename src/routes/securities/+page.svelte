@@ -8,6 +8,23 @@
 	import { enhance } from '$app/forms';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import {
+		columnFilteringFeature,
+		createColumnHelper,
+		createFilteredRowModel,
+		createSortedRowModel,
+		createTable,
+		filterFn_equalsString,
+		filterFn_includesString,
+		FlexRender,
+		globalFilteringFeature,
+		renderComponent,
+		rowSortingFeature,
+		sortFn_alphanumeric,
+		tableFeatures
+	} from '@tanstack/svelte-table';
+	import SortableHeader from '$lib/components/data-table/SortableHeader.svelte';
+	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
 
 	let { data } = $props();
 
@@ -28,6 +45,79 @@
 		else next.add(id);
 		selected = next;
 	}
+
+	const features = tableFeatures({
+		rowSortingFeature,
+		sortedRowModel: createSortedRowModel(),
+		sortFns: { alphanumeric: sortFn_alphanumeric },
+		columnFilteringFeature,
+		globalFilteringFeature,
+		filteredRowModel: createFilteredRowModel(),
+		filterFns: { includesString: filterFn_includesString, equalsString: filterFn_equalsString }
+	});
+
+	type SecurityRow = (typeof data.securities)[number];
+	const helper = createColumnHelper<typeof features, SecurityRow>();
+	const columns = helper.columns([
+		helper.display({
+			id: 'select',
+			header: () =>
+				renderComponent(Checkbox, {
+					checked: allSelected,
+					onCheckedChange: toggleAll,
+					'aria-label': 'Select all'
+				}),
+			cell: (ctx) =>
+				renderComponent(Checkbox, {
+					name: 'ids',
+					value: ctx.row.original.id,
+					checked: selected.has(ctx.row.original.id),
+					onCheckedChange: () => toggle(ctx.row.original.id),
+					'aria-label': `Select ${ctx.row.original.symbol}`
+				}),
+			enableGlobalFilter: false
+		}),
+		helper.accessor('symbol', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Symbol', header: h.header })
+		}),
+		helper.accessor('fullName', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Name', header: h.header }),
+			cell: (ctx) => ctx.getValue() ?? '—'
+		}),
+		helper.accessor('latestPrice', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Latest price', header: h.header }),
+			cell: (ctx) => {
+				const v = ctx.getValue();
+				return v != null ? `$${v.toFixed(2)}` : '—';
+			}
+		}),
+		helper.accessor('type', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Type', header: h.header }),
+			cell: (ctx) => ctx.getValue() ?? '—',
+			filterFn: 'equalsString'
+		}),
+		helper.accessor('sector', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Sector', header: h.header }),
+			cell: (ctx) => ctx.getValue() ?? '—',
+			filterFn: 'equalsString'
+		}),
+		helper.accessor('region', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Region', header: h.header }),
+			cell: (ctx) => ctx.getValue() ?? '—',
+			filterFn: 'equalsString'
+		})
+	]);
+
+	const table = createTable({
+		features,
+		columns,
+		get data() {
+			return data.securities;
+		}
+	});
+
+	const filterSelectClass =
+		'h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
 
 	let open = $state(false);
 	let symbol = $state('');
@@ -68,38 +158,80 @@
 			<h1 class="text-2xl font-semibold">Securities</h1>
 		</PageHeader>
 
+		<TableSearch
+			{table}
+			placeholder="Search securities…"
+			class="mb-4 max-w-sm"
+			onkeydown={(e) => {
+				if (e.key === 'Enter') e.preventDefault();
+			}}
+		/>
+
 		<Table.Root>
 			<Table.Header>
+				{#each table.getHeaderGroups() as group (group.id)}
+					<Table.Row>
+						{#each group.headers as header (header.id)}
+							<Table.Head class={header.column.id === 'select' ? 'w-10' : ''}>
+								{#if !header.isPlaceholder}<FlexRender {header} />{/if}
+							</Table.Head>
+						{/each}
+					</Table.Row>
+				{/each}
 				<Table.Row>
-					<Table.Head class="w-10">
-						<Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
+					<Table.Head></Table.Head>
+					<Table.Head></Table.Head>
+					<Table.Head></Table.Head>
+					<Table.Head></Table.Head>
+					<Table.Head>
+						<select
+							class={filterSelectClass}
+							value={(table.getColumn('type')?.getFilterValue() as string | undefined) ?? ''}
+							onchange={(e) =>
+								table.getColumn('type')?.setFilterValue(e.currentTarget.value || undefined)}
+						>
+							<option value="">All types</option>
+							{#each data.securityTypes as t (t.id)}
+								<option value={t.name}>{t.name}</option>
+							{/each}
+						</select>
 					</Table.Head>
-					<Table.Head>Symbol</Table.Head>
-					<Table.Head>Name</Table.Head>
-					<Table.Head>Latest price</Table.Head>
-					<Table.Head>Type</Table.Head>
-					<Table.Head>Sector</Table.Head>
-					<Table.Head>Region</Table.Head>
+					<Table.Head>
+						<select
+							class={filterSelectClass}
+							value={(table.getColumn('sector')?.getFilterValue() as string | undefined) ?? ''}
+							onchange={(e) =>
+								table.getColumn('sector')?.setFilterValue(e.currentTarget.value || undefined)}
+						>
+							<option value="">All sectors</option>
+							{#each data.sectors as s (s.id)}
+								<option value={s.name}>{s.name}</option>
+							{/each}
+						</select>
+					</Table.Head>
+					<Table.Head>
+						<select
+							class={filterSelectClass}
+							value={(table.getColumn('region')?.getFilterValue() as string | undefined) ?? ''}
+							onchange={(e) =>
+								table.getColumn('region')?.setFilterValue(e.currentTarget.value || undefined)}
+						>
+							<option value="">All regions</option>
+							{#each data.regions as r (r.id)}
+								<option value={r.name}>{r.name}</option>
+							{/each}
+						</select>
+					</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#each data.securities as s (s.id)}
+				{#each table.getRowModel().rows as row (row.id)}
 					<Table.Row>
-						<Table.Cell>
-							<Checkbox
-								name="ids"
-								value={s.id}
-								checked={selected.has(s.id)}
-								onCheckedChange={() => toggle(s.id)}
-								aria-label="Select {s.symbol}"
-							/>
-						</Table.Cell>
-						<Table.Cell class="font-mono">{s.symbol}</Table.Cell>
-						<Table.Cell>{s.fullName ?? '—'}</Table.Cell>
-						<Table.Cell>{s.latestPrice != null ? `$${s.latestPrice.toFixed(2)}` : '—'}</Table.Cell>
-						<Table.Cell>{s.type ?? '—'}</Table.Cell>
-						<Table.Cell>{s.sector ?? '—'}</Table.Cell>
-						<Table.Cell>{s.region ?? '—'}</Table.Cell>
+						{#each row.getAllCells() as cell (cell.id)}
+							<Table.Cell class={cell.column.id === 'symbol' ? 'font-mono' : ''}>
+								<FlexRender {cell} />
+							</Table.Cell>
+						{/each}
 					</Table.Row>
 				{/each}
 			</Table.Body>

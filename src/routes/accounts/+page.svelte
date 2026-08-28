@@ -9,6 +9,23 @@
 	import TagInput from '$lib/components/TagInput.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { resolve } from '$app/paths';
+	import {
+		columnFilteringFeature,
+		createColumnHelper,
+		createFilteredRowModel,
+		createSortedRowModel,
+		createTable,
+		filterFn_equalsString,
+		filterFn_includesString,
+		FlexRender,
+		globalFilteringFeature,
+		renderComponent,
+		rowSortingFeature,
+		sortFn_alphanumeric,
+		tableFeatures
+	} from '@tanstack/svelte-table';
+	import SortableHeader from '$lib/components/data-table/SortableHeader.svelte';
+	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
 
 	let { data } = $props();
 
@@ -16,6 +33,34 @@
 	let name = $state('');
 	let owner = $state('Dan');
 	let tagInput = $state<ReturnType<typeof TagInput> | undefined>(undefined);
+
+	const features = tableFeatures({
+		rowSortingFeature,
+		sortedRowModel: createSortedRowModel(),
+		sortFns: { alphanumeric: sortFn_alphanumeric },
+		columnFilteringFeature,
+		globalFilteringFeature,
+		filteredRowModel: createFilteredRowModel(),
+		filterFns: { includesString: filterFn_includesString, equalsString: filterFn_equalsString }
+	});
+
+	const helper = createColumnHelper<typeof features, (typeof data.accounts)[number]>();
+	const columns = helper.columns([
+		helper.accessor('name', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Name', header: h.header })
+		}),
+		helper.accessor('owner', {
+			header: (h) => renderComponent(SortableHeader, { label: 'Owner', header: h.header })
+		})
+	]);
+
+	const table = createTable({
+		features,
+		columns,
+		get data() {
+			return data.accounts;
+		}
+	});
 </script>
 
 <div class="p-6">
@@ -26,26 +71,33 @@
 		<h1 class="text-2xl font-semibold">Accounts</h1>
 	</PageHeader>
 
+	<TableSearch {table} placeholder="Search accounts…" class="mb-4 max-w-sm" />
+
 	<Table.Root>
 		<Table.Header>
-			<Table.Row>
-				<Table.Head>Name</Table.Head>
-				<Table.Head>Owner</Table.Head>
-				<Table.Head class="w-10"></Table.Head>
-			</Table.Row>
+			{#each table.getHeaderGroups() as group (group.id)}
+				<Table.Row>
+					{#each group.headers as header (header.id)}
+						<Table.Head>
+							<FlexRender {header} />
+						</Table.Head>
+					{/each}
+				</Table.Row>
+			{/each}
 		</Table.Header>
 		<Table.Body>
-			{#each data.accounts as account (account.id)}
+			{#each table.getRowModel().rows as row (row.id)}
 				<Table.Row
 					class="cursor-pointer"
 					onclick={(e) => {
 						if (!(e.target as HTMLElement).closest('[data-no-nav]')) {
-							goto(resolve(`/accounts/${account.id}`));
+							goto(resolve(`/accounts/${row.original.id}`));
 						}
 					}}
 				>
-					<Table.Cell>{account.name}</Table.Cell>
-					<Table.Cell>{account.owner}</Table.Cell>
+					{#each row.getAllCells() as cell (cell.id)}
+						<Table.Cell><FlexRender {cell} /></Table.Cell>
+					{/each}
 				</Table.Row>
 			{/each}
 		</Table.Body>
