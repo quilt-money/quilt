@@ -8,23 +8,8 @@
 	import { enhance } from '$app/forms';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import {
-		columnFilteringFeature,
-		createColumnHelper,
-		createFilteredRowModel,
-		createSortedRowModel,
-		createTable,
-		filterFn_equalsString,
-		filterFn_includesString,
-		FlexRender,
-		globalFilteringFeature,
-		renderComponent,
-		rowSortingFeature,
-		sortFn_alphanumeric,
-		tableFeatures
-	} from '@tanstack/svelte-table';
-	import SortableHeader from '$lib/components/data-table/SortableHeader.svelte';
-	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
+	import { renderComponent } from '@tanstack/svelte-table';
+	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 
 	let { data } = $props();
 
@@ -46,21 +31,11 @@
 		selected = next;
 	}
 
-	const features = tableFeatures({
-		rowSortingFeature,
-		sortedRowModel: createSortedRowModel(),
-		sortFns: { alphanumeric: sortFn_alphanumeric },
-		columnFilteringFeature,
-		globalFilteringFeature,
-		filteredRowModel: createFilteredRowModel(),
-		filterFns: { includesString: filterFn_includesString, equalsString: filterFn_equalsString }
-	});
-
 	type SecurityRow = (typeof data.securities)[number];
-	const helper = createColumnHelper<typeof features, SecurityRow>();
-	const columns = helper.columns([
-		helper.display({
+	const columns: DataTableColumn<SecurityRow>[] = [
+		{
 			id: 'select',
+			headerClass: 'w-10',
 			header: () =>
 				renderComponent(Checkbox, {
 					checked: allSelected,
@@ -76,45 +51,36 @@
 					'aria-label': `Select ${ctx.row.original.symbol}`
 				}),
 			enableGlobalFilter: false
-		}),
-		helper.accessor('symbol', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Symbol', header: h.header })
-		}),
-		helper.accessor('fullName', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Name', header: h.header }),
-			cell: (ctx) => ctx.getValue() ?? '—'
-		}),
-		helper.accessor('latestPrice', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Latest price', header: h.header }),
+		},
+		{ accessorKey: 'symbol', header: 'Symbol', cellClass: 'font-mono' },
+		{ accessorKey: 'fullName', header: 'Name', cell: (ctx) => ctx.getValue() ?? '—' },
+		{
+			accessorKey: 'latestPrice',
+			header: 'Latest price',
 			cell: (ctx) => {
-				const v = ctx.getValue();
+				const v = ctx.getValue() as number | null;
 				return v != null ? `$${v.toFixed(2)}` : '—';
 			}
-		}),
-		helper.accessor('type', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Type', header: h.header }),
+		},
+		{
+			accessorKey: 'type',
+			header: 'Type',
 			cell: (ctx) => ctx.getValue() ?? '—',
 			filterFn: 'equalsString'
-		}),
-		helper.accessor('sector', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Sector', header: h.header }),
+		},
+		{
+			accessorKey: 'sector',
+			header: 'Sector',
 			cell: (ctx) => ctx.getValue() ?? '—',
 			filterFn: 'equalsString'
-		}),
-		helper.accessor('region', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Region', header: h.header }),
+		},
+		{
+			accessorKey: 'region',
+			header: 'Region',
 			cell: (ctx) => ctx.getValue() ?? '—',
 			filterFn: 'equalsString'
-		})
-	]);
-
-	const table = createTable({
-		features,
-		columns,
-		get data() {
-			return data.securities;
 		}
-	});
+	];
 
 	const filterSelectClass =
 		'h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
@@ -158,84 +124,60 @@
 			<h1 class="text-2xl font-semibold">Securities</h1>
 		</PageHeader>
 
-		<TableSearch
-			{table}
-			placeholder="Search securities…"
-			class="mb-4 max-w-sm"
-			onkeydown={(e) => {
+		<DataTable
+			data={data.securities}
+			{columns}
+			searchPlaceholder="Search securities…"
+			onSearchKeydown={(e) => {
 				if (e.key === 'Enter') e.preventDefault();
 			}}
-		/>
-
-		<Table.Root>
-			<Table.Header>
-				{#each table.getHeaderGroups() as group (group.id)}
-					<Table.Row>
-						{#each group.headers as header (header.id)}
-							<Table.Head class={header.column.id === 'select' ? 'w-10' : ''}>
-								{#if !header.isPlaceholder}<FlexRender {header} />{/if}
-							</Table.Head>
+		>
+			{#snippet filterRow(table)}
+				<Table.Head></Table.Head>
+				<Table.Head></Table.Head>
+				<Table.Head></Table.Head>
+				<Table.Head></Table.Head>
+				<Table.Head>
+					<select
+						class={filterSelectClass}
+						value={(table.getColumn('type')?.getFilterValue() as string | undefined) ?? ''}
+						onchange={(e) =>
+							table.getColumn('type')?.setFilterValue(e.currentTarget.value || undefined)}
+					>
+						<option value="">All types</option>
+						{#each data.securityTypes as t (t.id)}
+							<option value={t.name}>{t.name}</option>
 						{/each}
-					</Table.Row>
-				{/each}
-				<Table.Row>
-					<Table.Head></Table.Head>
-					<Table.Head></Table.Head>
-					<Table.Head></Table.Head>
-					<Table.Head></Table.Head>
-					<Table.Head>
-						<select
-							class={filterSelectClass}
-							value={(table.getColumn('type')?.getFilterValue() as string | undefined) ?? ''}
-							onchange={(e) =>
-								table.getColumn('type')?.setFilterValue(e.currentTarget.value || undefined)}
-						>
-							<option value="">All types</option>
-							{#each data.securityTypes as t (t.id)}
-								<option value={t.name}>{t.name}</option>
-							{/each}
-						</select>
-					</Table.Head>
-					<Table.Head>
-						<select
-							class={filterSelectClass}
-							value={(table.getColumn('sector')?.getFilterValue() as string | undefined) ?? ''}
-							onchange={(e) =>
-								table.getColumn('sector')?.setFilterValue(e.currentTarget.value || undefined)}
-						>
-							<option value="">All sectors</option>
-							{#each data.sectors as s (s.id)}
-								<option value={s.name}>{s.name}</option>
-							{/each}
-						</select>
-					</Table.Head>
-					<Table.Head>
-						<select
-							class={filterSelectClass}
-							value={(table.getColumn('region')?.getFilterValue() as string | undefined) ?? ''}
-							onchange={(e) =>
-								table.getColumn('region')?.setFilterValue(e.currentTarget.value || undefined)}
-						>
-							<option value="">All regions</option>
-							{#each data.regions as r (r.id)}
-								<option value={r.name}>{r.name}</option>
-							{/each}
-						</select>
-					</Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each table.getRowModel().rows as row (row.id)}
-					<Table.Row>
-						{#each row.getAllCells() as cell (cell.id)}
-							<Table.Cell class={cell.column.id === 'symbol' ? 'font-mono' : ''}>
-								<FlexRender {cell} />
-							</Table.Cell>
+					</select>
+				</Table.Head>
+				<Table.Head>
+					<select
+						class={filterSelectClass}
+						value={(table.getColumn('sector')?.getFilterValue() as string | undefined) ?? ''}
+						onchange={(e) =>
+							table.getColumn('sector')?.setFilterValue(e.currentTarget.value || undefined)}
+					>
+						<option value="">All sectors</option>
+						{#each data.sectors as s (s.id)}
+							<option value={s.name}>{s.name}</option>
 						{/each}
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
+					</select>
+				</Table.Head>
+				<Table.Head>
+					<select
+						class={filterSelectClass}
+						value={(table.getColumn('region')?.getFilterValue() as string | undefined) ?? ''}
+						onchange={(e) =>
+							table.getColumn('region')?.setFilterValue(e.currentTarget.value || undefined)}
+					>
+						<option value="">All regions</option>
+						{#each data.regions as r (r.id)}
+							<option value={r.name}>{r.name}</option>
+						{/each}
+					</select>
+				</Table.Head>
+			{/snippet}
+		</DataTable>
 	</form>
 </div>
 

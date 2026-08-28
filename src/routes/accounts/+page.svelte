@@ -1,5 +1,4 @@
 <script lang="ts">
-	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -9,23 +8,7 @@
 	import TagInput from '$lib/components/TagInput.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { resolve } from '$app/paths';
-	import {
-		columnFilteringFeature,
-		createColumnHelper,
-		createFilteredRowModel,
-		createSortedRowModel,
-		createTable,
-		filterFn_equalsString,
-		filterFn_includesString,
-		FlexRender,
-		globalFilteringFeature,
-		renderComponent,
-		rowSortingFeature,
-		sortFn_alphanumeric,
-		tableFeatures
-	} from '@tanstack/svelte-table';
-	import SortableHeader from '$lib/components/data-table/SortableHeader.svelte';
-	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
+	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 
 	let { data } = $props();
 
@@ -34,33 +17,10 @@
 	let owner = $state('Dan');
 	let tagInput = $state<ReturnType<typeof TagInput> | undefined>(undefined);
 
-	const features = tableFeatures({
-		rowSortingFeature,
-		sortedRowModel: createSortedRowModel(),
-		sortFns: { alphanumeric: sortFn_alphanumeric },
-		columnFilteringFeature,
-		globalFilteringFeature,
-		filteredRowModel: createFilteredRowModel(),
-		filterFns: { includesString: filterFn_includesString, equalsString: filterFn_equalsString }
-	});
-
-	const helper = createColumnHelper<typeof features, (typeof data.accounts)[number]>();
-	const columns = helper.columns([
-		helper.accessor('name', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Name', header: h.header })
-		}),
-		helper.accessor('owner', {
-			header: (h) => renderComponent(SortableHeader, { label: 'Owner', header: h.header })
-		})
-	]);
-
-	const table = createTable({
-		features,
-		columns,
-		get data() {
-			return data.accounts;
-		}
-	});
+	const columns: DataTableColumn<(typeof data.accounts)[number]>[] = [
+		{ accessorKey: 'name', header: 'Name' },
+		{ accessorKey: 'owner', header: 'Owner' }
+	];
 </script>
 
 <div class="p-6">
@@ -71,37 +31,12 @@
 		<h1 class="text-2xl font-semibold">Accounts</h1>
 	</PageHeader>
 
-	<TableSearch {table} placeholder="Search accounts…" class="mb-4 max-w-sm" />
-
-	<Table.Root>
-		<Table.Header>
-			{#each table.getHeaderGroups() as group (group.id)}
-				<Table.Row>
-					{#each group.headers as header (header.id)}
-						<Table.Head>
-							<FlexRender {header} />
-						</Table.Head>
-					{/each}
-				</Table.Row>
-			{/each}
-		</Table.Header>
-		<Table.Body>
-			{#each table.getRowModel().rows as row (row.id)}
-				<Table.Row
-					class="cursor-pointer"
-					onclick={(e) => {
-						if (!(e.target as HTMLElement).closest('[data-no-nav]')) {
-							goto(resolve(`/accounts/${row.original.id}`));
-						}
-					}}
-				>
-					{#each row.getAllCells() as cell (cell.id)}
-						<Table.Cell><FlexRender {cell} /></Table.Cell>
-					{/each}
-				</Table.Row>
-			{/each}
-		</Table.Body>
-	</Table.Root>
+	<DataTable
+		data={data.accounts}
+		{columns}
+		searchPlaceholder="Search accounts…"
+		onRowClick={(row) => goto(resolve(`/accounts/${row.id}`))}
+	/>
 </div>
 
 <Dialog.Root bind:open>
