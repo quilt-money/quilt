@@ -53,7 +53,7 @@
 			enableGlobalFilter: false
 		},
 		{ accessorKey: 'symbol', header: 'Symbol', cellClass: 'font-mono' },
-		{ accessorKey: 'fullName', header: 'Name', cell: (ctx) => ctx.getValue() ?? '—' },
+		{ accessorKey: 'fullName', header: 'Name' },
 		{
 			accessorKey: 'latestPrice',
 			header: 'Latest price',
@@ -62,24 +62,9 @@
 				return v != null ? `$${v.toFixed(2)}` : '—';
 			}
 		},
-		{
-			accessorKey: 'type',
-			header: 'Type',
-			cell: (ctx) => ctx.getValue() ?? '—',
-			filterFn: 'equalsString'
-		},
-		{
-			accessorKey: 'sector',
-			header: 'Sector',
-			cell: (ctx) => ctx.getValue() ?? '—',
-			filterFn: 'equalsString'
-		},
-		{
-			accessorKey: 'region',
-			header: 'Region',
-			cell: (ctx) => ctx.getValue() ?? '—',
-			filterFn: 'equalsString'
-		}
+		{ accessorKey: 'type', header: 'Type', filterFn: 'equalsString' },
+		{ accessorKey: 'sector', header: 'Sector', filterFn: 'equalsString' },
+		{ accessorKey: 'region', header: 'Region', filterFn: 'equalsString' }
 	];
 
 	const filterSelectClass =

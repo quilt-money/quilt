@@ -106,7 +106,7 @@
 				return helper.accessor((row) => row[accessorKey] as unknown, {
 					id,
 					header,
-					cell: col.cell,
+					cell: col.cell ?? ((ctx) => ctx.getValue() ?? '—'),
 					enableSorting: col.sortable ?? true,
 					enableGlobalFilter: col.enableGlobalFilter,
 					filterFn: col.filterFn
