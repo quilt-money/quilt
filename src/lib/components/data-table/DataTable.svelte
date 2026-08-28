@@ -32,9 +32,7 @@
 		header?: string | ((ctx: HeaderContext<DataTableFeatures, TData, unknown>) => unknown);
 		/** Defaults to the raw accessor value when omitted. */
 		cell?: (ctx: CellContext<DataTableFeatures, TData, unknown>) => unknown;
-		/** Applied to both the header and body cells, unless overridden below. */
-		class?: string;
-		headerClass?: string;
+		/** Applied to the body cell. */
 		cellClass?: string;
 		/** Only meaningful when `accessorKey` is set. Defaults to true. */
 		sortable?: boolean;
@@ -75,15 +73,6 @@
 		onRowClick?: (row: TData) => void;
 		filterRow?: Snippet<[typeof table]>;
 	} = $props();
-
-	const classByColumnId = $derived(
-		new Map(
-			columnDefs.map((col) => [
-				col.id ?? col.accessorKey!,
-				{ headerClass: col.headerClass ?? col.class, cellClass: col.cellClass ?? col.class }
-			])
-		)
-	);
 
 	const helper = createColumnHelper<DataTableFeatures, TData>();
 
@@ -148,8 +137,8 @@
 		{#each table.getHeaderGroups() as group (group.id)}
 			<Table.Row>
 				{#each group.headers as header (header.id)}
-					<Table.Head class={classByColumnId.get(header.column.id)?.headerClass}>
-						{#if !header.isPlaceholder}<FlexRender {header} />{/if}
+					<Table.Head>
+						<FlexRender {header} />
 					</Table.Head>
 				{/each}
 			</Table.Row>
@@ -170,8 +159,8 @@
 						}
 					: undefined}
 			>
-				{#each row.getAllCells() as cell (cell.id)}
-					<Table.Cell class={classByColumnId.get(cell.column.id)?.cellClass}>
+				{#each row.getAllCells() as cell, i (cell.id)}
+					<Table.Cell class={columnDefs[i].cellClass}>
 						<FlexRender {cell} />
 					</Table.Cell>
 				{/each}
