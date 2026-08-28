@@ -6,12 +6,6 @@
 
 	let { data } = $props();
 
-	let accountId = $state('');
-
-	$effect(() => {
-		if (data.accounts.length && !accountId) accountId = data.accounts[0].id;
-	});
-
 	const columns: DataTableColumn<(typeof data.holdings)[number]>[] = [
 		{ accessorKey: 'accountName', header: 'Account' },
 		{ accessorKey: 'securitySymbol', header: 'Symbol', cellClass: 'font-mono' },
