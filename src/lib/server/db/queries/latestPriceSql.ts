@@ -10,7 +10,7 @@ export function latestPriceSql() {
 	return sql<number | null>`(
         select ${priceSnapshot.price} from ${priceSnapshot}
         where ${priceSnapshot.securityId} = ${security.id}
-        order by ${priceSnapshot.snapshotDate} desc
+        order by ${priceSnapshot.snapshotTime} desc
         limit 1
     )`;
 }

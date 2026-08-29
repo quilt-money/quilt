@@ -67,9 +67,9 @@ export const priceSnapshot = sqliteTable(
 			.notNull()
 			.references(() => security.id, { onDelete: 'cascade' }),
 		price: real('price').notNull(),
-		snapshotDate: text('snapshot_date').notNull()
+		snapshotTime: text('snapshot_time').notNull()
 	},
-	(t) => [unique().on(t.securityId, t.snapshotDate)]
+	(t) => [unique().on(t.securityId, t.snapshotTime)]
 );
 
 export const tag = sqliteTable('tag', {

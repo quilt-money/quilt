@@ -87,7 +87,7 @@ export const actions = {
 		const sectorIdByName = new Map(sectors.map((s) => [s.name, s.id]));
 		const regionIdByName = new Map(regions.map((r) => [r.name, r.id]));
 
-		const snapshotDate = new Date().toISOString().slice(0, 10);
+		const snapshotTime = new Date().toISOString();
 
 		for (const s of securities) {
 			let profile;
@@ -118,9 +118,9 @@ export const actions = {
 			if (profile.price != null) {
 				await db
 					.insert(priceSnapshot)
-					.values({ securityId: s.id, price: profile.price, snapshotDate })
+					.values({ securityId: s.id, price: profile.price, snapshotTime })
 					.onConflictDoUpdate({
-						target: [priceSnapshot.securityId, priceSnapshot.snapshotDate],
+						target: [priceSnapshot.securityId, priceSnapshot.snapshotTime],
 						set: { price: profile.price }
 					});
 			}
