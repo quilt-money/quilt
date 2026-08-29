@@ -35,11 +35,6 @@
 					<Table.Cell class="font-mono">{h.symbol}</Table.Cell>
 					<Table.Cell class="text-muted-foreground">{h.fullName ?? '—'}</Table.Cell>
 					<Table.Cell class="text-right">{h.shares ?? '—'}</Table.Cell>
-					<Table.Cell class="text-right"
-						>{h.currentValue != null
-							? `$${h.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-							: '—'}</Table.Cell
-					>
 				</Table.Row>
 			{:else}
 				<Table.Row>

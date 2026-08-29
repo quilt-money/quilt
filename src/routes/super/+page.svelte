@@ -4,6 +4,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { formatMoney } from '$lib/format';
 
 	let { data } = $props();
 
@@ -11,6 +12,8 @@
 	type UnheldSecurityRow = (typeof data.unheldSecurities)[number];
 
 	const rows = $derived([...data.holdings, ...data.unheldSecurities]);
+
+	let filteredRows = $state<(HoldingRow | UnheldSecurityRow)[]>([]);
 
 	let selected = $state(new Set<string>());
 
@@ -33,7 +36,7 @@
 
 	const balanceLabel = $derived(selected.size > 0 ? 'Selected balance' : 'Total balance');
 	const balance = $derived(
-		sumValue(selected.size > 0 ? rows.filter((r) => selected.has(r.id)) : rows)
+		sumValue(selected.size > 0 ? filteredRows.filter((r) => selected.has(r.id)) : filteredRows)
 	);
 
 	const columns: DataTableColumn<HoldingRow | UnheldSecurityRow>[] = [
@@ -53,7 +56,7 @@
 				}),
 			enableGlobalFilter: false
 		},
-		{ accessorKey: 'accountName', header: 'Account' },
+		{ accessorKey: 'accountName', header: 'Account', filterFn: 'arrHas' },
 		{ accessorKey: 'securitySymbol', header: 'Symbol', cellClass: 'font-mono' },
 		{ accessorKey: 'securityFullName', header: 'Name' },
 		{ accessorKey: 'shares', header: 'Shares' },
@@ -63,10 +66,7 @@
 		{
 			accessorKey: 'totalValue',
 			header: 'Total value',
-			cell: (ctx) => {
-				const v = ctx.getValue() as number | null;
-				return v != null ? `$${v.toFixed(2)}` : '—';
-			}
+			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
 		}
 	];
 </script>
@@ -78,8 +78,8 @@
 
 	<div class="mb-4 flex items-baseline gap-2 rounded-md border bg-muted/50 px-4 py-3">
 		<span class="text-sm font-medium text-muted-foreground">{balanceLabel}</span>
-		<span class="text-lg font-semibold">${balance.toFixed(2)}</span>
+		<span class="text-lg font-semibold">{formatMoney(balance)}</span>
 	</div>
 
-	<DataTable data={rows} {columns} searchPlaceholder="Search…" />
+	<DataTable data={rows} {columns} searchPlaceholder="Search…" bind:filteredData={filteredRows} />
 </div>

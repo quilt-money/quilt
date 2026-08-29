@@ -6,6 +6,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { renderComponent } from '@tanstack/svelte-table';
 	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
+	import { formatMoney } from '$lib/format';
 
 	let { data } = $props();
 
@@ -55,10 +56,7 @@
 		{
 			accessorKey: 'latestPrice',
 			header: 'Latest price',
-			cell: (ctx) => {
-				const v = ctx.getValue() as number | null;
-				return v != null ? `$${v.toFixed(2)}` : '—';
-			}
+			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
 		},
 		{
 			accessorKey: 'lastSynced',
