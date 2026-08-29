@@ -2,13 +2,14 @@
 	const navItems = [
 		{ title: 'Dashboard', url: '/dashboard' },
 		{ title: 'Accounts', url: '/accounts' },
-		{ title: 'Holdings', url: '/holdings' },
+		{ title: 'Super', url: '/super' },
 		{ title: 'Securities', url: '/securities' }
 	] as const;
 </script>
 
 <script lang="ts">
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { resolve } from '$app/paths';
 	import type { ComponentProps } from 'svelte';
 
 	let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
@@ -23,7 +24,7 @@
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton>
 								{#snippet child({ props })}
-									<a href={item.url} {...props}>{item.title}</a>
+									<a href={resolve(item.url)} {...props}>{item.title}</a>
 								{/snippet}
 							</Sidebar.MenuButton>
 						</Sidebar.MenuItem>
