@@ -17,16 +17,10 @@ export async function load() {
 			id: security.id,
 			symbol: security.symbol,
 			fullName: security.fullName,
-			type: securityType.name,
-			sector: sector.name,
-			region: region.name,
 			latestPrice: latestPriceSql(),
 			lastSynced: latestSnapshotTimeSql()
 		})
 		.from(security)
-		.leftJoin(securityType, eq(security.typeId, securityType.id))
-		.leftJoin(sector, eq(security.sectorId, sector.id))
-		.leftJoin(region, eq(security.regionId, region.id))
 		.orderBy(asc(security.symbol));
 
 	const [securityTypes, sectors, regions] = await Promise.all([

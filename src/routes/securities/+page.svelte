@@ -60,9 +60,6 @@
 				return v != null ? `$${v.toFixed(2)}` : '—';
 			}
 		},
-		{ accessorKey: 'type', header: 'Type', filterFn: 'arrHas' },
-		{ accessorKey: 'sector', header: 'Sector', filterFn: 'arrHas' },
-		{ accessorKey: 'region', header: 'Region', filterFn: 'arrHas' },
 		{
 			accessorKey: 'lastSynced',
 			header: 'Last synced',
