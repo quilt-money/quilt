@@ -1,7 +1,6 @@
 import { db } from '$lib/server/db';
 import { security, securityType, sector, region, priceSnapshot } from '$lib/server/db/schema';
-import { latestPriceSql, latestSnapshotTimeSql } from '$lib/server/db/queries/latestPriceSql';
-import { asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, max } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import {
@@ -12,55 +11,38 @@ import {
 } from '$lib/server/fmp';
 
 export async function load() {
-	const securities = await db
+	const latestSnapshot = db
+		.select({
+			securityId: priceSnapshot.securityId,
+			snapshotTime: max(priceSnapshot.snapshotTime).as('snapshot_time')
+		})
+		.from(priceSnapshot)
+		.groupBy(priceSnapshot.securityId)
+		.as('latest_snapshot');
+
+	const securitiesWithPricesAndSyncTimes = await db
 		.select({
 			id: security.id,
 			symbol: security.symbol,
 			fullName: security.fullName,
-			latestPrice: latestPriceSql(),
-			lastSynced: latestSnapshotTimeSql()
+			latestPrice: priceSnapshot.price,
+			lastSynced: priceSnapshot.snapshotTime
 		})
 		.from(security)
+		.leftJoin(latestSnapshot, eq(security.id, latestSnapshot.securityId))
+		.leftJoin(
+			priceSnapshot,
+			and(
+				eq(priceSnapshot.securityId, latestSnapshot.securityId),
+				eq(priceSnapshot.snapshotTime, latestSnapshot.snapshotTime)
+			)
+		)
 		.orderBy(asc(security.symbol));
 
-	const [securityTypes, sectors, regions] = await Promise.all([
-		db
-			.select({ id: securityType.id, name: securityType.name })
-			.from(securityType)
-			.orderBy(securityType.name),
-		db.select({ id: sector.id, name: sector.name }).from(sector).orderBy(sector.name),
-		db.select({ id: region.id, name: region.name }).from(region).orderBy(region.name)
-	]);
-
-	return { securities, securityTypes, sectors, regions };
+	return { securitiesWithPricesAndSyncTimes };
 }
 
 export const actions = {
-	create: async ({ request }) => {
-		const data = await request.formData();
-		const symbol = data.get('symbol')?.toString().trim().toUpperCase();
-		const fullName = data.get('fullName')?.toString().trim() || null;
-		const typeId = data.get('typeId')?.toString() || null;
-		const sectorId = data.get('sectorId')?.toString() || null;
-		const regionId = data.get('regionId')?.toString() || null;
-
-		if (!symbol) return fail(400, { error: 'Symbol is required' });
-
-		const [existing] = await db
-			.select({ id: security.id })
-			.from(security)
-			.where(eq(security.symbol, symbol));
-		if (existing) return fail(400, { error: `${symbol} already exists` });
-
-		await db.insert(security).values({
-			symbol,
-			fullName,
-			typeId,
-			sectorId,
-			regionId
-		});
-	},
-
 	sync: async ({ request, fetch }) => {
 		if (!env.FMP_API_KEY) return fail(500, { error: 'FMP_API_KEY is not set' });
 
