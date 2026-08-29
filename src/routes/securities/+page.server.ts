@@ -14,7 +14,7 @@ export async function load() {
 	const latestSnapshot = db
 		.select({
 			securityId: priceSnapshot.securityId,
-			snapshotTime: max(priceSnapshot.snapshotTime).as('snapshot_time')
+			latestSnapshotTime: max(priceSnapshot.snapshotTime).as('latest_snapshot_time')
 		})
 		.from(priceSnapshot)
 		.groupBy(priceSnapshot.securityId)
@@ -34,7 +34,7 @@ export async function load() {
 			priceSnapshot,
 			and(
 				eq(priceSnapshot.securityId, latestSnapshot.securityId),
-				eq(priceSnapshot.snapshotTime, latestSnapshot.snapshotTime)
+				eq(priceSnapshot.snapshotTime, latestSnapshot.latestSnapshotTime)
 			)
 		)
 		.orderBy(asc(security.symbol));
