@@ -6,11 +6,7 @@
 
 	let { data } = $props();
 
-	const columns: DataTableColumn<(typeof data.holdings)[number]>[] = [
-		{ accessorKey: 'accountName', header: 'Account' },
-		{ accessorKey: 'securitySymbol', header: 'Symbol', cellClass: 'font-mono' },
-		{ accessorKey: 'shares', header: 'Shares' }
-	];
+	const columns: DataTableColumn<HoldingRow | UnheldSecurityRow>[] = [];
 </script>
 
 <div class="p-6">
@@ -33,5 +29,5 @@
 		{/snippet}
 	</PageHeader>
 
-	<DataTable data={data.holdings} {columns} searchPlaceholder="Search holdings…" />
+	<DataTable data={rows} {columns} searchPlaceholder="Search holdings…" />
 </div>
