@@ -67,7 +67,9 @@
 		search = true,
 		searchPlaceholder = 'Search…',
 		onSearchKeydown,
-		onRowClick
+		onRowClick,
+		// eslint-disable-next-line no-useless-assignment -- read by the parent via bind:filteredData
+		filteredData = $bindable([])
 	}: {
 		data: TData[];
 		columns: DataTableColumn<TData>[];
@@ -75,6 +77,8 @@
 		searchPlaceholder?: string;
 		onSearchKeydown?: (e: KeyboardEvent) => void;
 		onRowClick?: (row: TData) => void;
+		/** Bind to receive the rows currently passing search/column filters, kept in sync as the user filters. */
+		filteredData?: TData[];
 	} = $props();
 
 	const helper = createColumnHelper<DataTableFeatures, TData>();
@@ -150,6 +154,10 @@
 		table.getColumn(id)?.setFilterValue(value?.length ? value : undefined);
 		setSearchParam(id, value?.length ? value.join(',') : undefined);
 	}
+
+	$effect(() => {
+		filteredData = table.getRowModel().rows.map((row) => row.original);
+	});
 
 	let tableEl: HTMLTableElement | null = $state(null);
 	let theadEl: HTMLTableSectionElement | null = $state(null);
