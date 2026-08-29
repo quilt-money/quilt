@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { page } from '$app/state';
-	import { replaceState } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import type { PathnameWithSearchOrHash } from '$app/types';
+	import { setSearchParam } from './url-search-param';
 
 	type TableSearchProps = {
 		atoms: { globalFilter: { get: () => unknown } };
@@ -24,14 +21,7 @@
 
 	function setSearch(value: string) {
 		table.setGlobalFilter(value);
-
-		const url = new URL(page.url);
-		if (value) {
-			url.searchParams.set('search', value);
-		} else {
-			url.searchParams.delete('search');
-		}
-		replaceState(resolve(`${url.pathname}${url.search}` as PathnameWithSearchOrHash), page.state);
+		setSearchParam('search', value);
 	}
 </script>
 
