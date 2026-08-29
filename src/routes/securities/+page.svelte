@@ -1,5 +1,4 @@
 <script lang="ts">
-	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -61,13 +60,10 @@
 				return v != null ? `$${v.toFixed(2)}` : '—';
 			}
 		},
-		{ accessorKey: 'type', header: 'Type', filterFn: 'equalsString' },
-		{ accessorKey: 'sector', header: 'Sector', filterFn: 'equalsString' },
-		{ accessorKey: 'region', header: 'Region', filterFn: 'equalsString' }
+		{ accessorKey: 'type', header: 'Type', filterFn: 'arrHas' },
+		{ accessorKey: 'sector', header: 'Sector', filterFn: 'arrHas' },
+		{ accessorKey: 'region', header: 'Region', filterFn: 'arrHas' }
 	];
-
-	const filterSelectClass =
-		'h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
 
 	let open = $state(false);
 	let symbol = $state('');
@@ -115,53 +111,7 @@
 			onSearchKeydown={(e) => {
 				if (e.key === 'Enter') e.preventDefault();
 			}}
-		>
-			{#snippet filterRow(table)}
-				<Table.Head></Table.Head>
-				<Table.Head></Table.Head>
-				<Table.Head></Table.Head>
-				<Table.Head></Table.Head>
-				<Table.Head>
-					<select
-						class={filterSelectClass}
-						value={(table.getColumn('type')?.getFilterValue() as string | undefined) ?? ''}
-						onchange={(e) =>
-							table.getColumn('type')?.setFilterValue(e.currentTarget.value || undefined)}
-					>
-						<option value="">All types</option>
-						{#each data.securityTypes as t (t.id)}
-							<option value={t.name}>{t.name}</option>
-						{/each}
-					</select>
-				</Table.Head>
-				<Table.Head>
-					<select
-						class={filterSelectClass}
-						value={(table.getColumn('sector')?.getFilterValue() as string | undefined) ?? ''}
-						onchange={(e) =>
-							table.getColumn('sector')?.setFilterValue(e.currentTarget.value || undefined)}
-					>
-						<option value="">All sectors</option>
-						{#each data.sectors as s (s.id)}
-							<option value={s.name}>{s.name}</option>
-						{/each}
-					</select>
-				</Table.Head>
-				<Table.Head>
-					<select
-						class={filterSelectClass}
-						value={(table.getColumn('region')?.getFilterValue() as string | undefined) ?? ''}
-						onchange={(e) =>
-							table.getColumn('region')?.setFilterValue(e.currentTarget.value || undefined)}
-					>
-						<option value="">All regions</option>
-						{#each data.regions as r (r.id)}
-							<option value={r.name}>{r.name}</option>
-						{/each}
-					</select>
-				</Table.Head>
-			{/snippet}
-		</DataTable>
+		/>
 	</form>
 </div>
 
