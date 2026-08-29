@@ -1,10 +1,12 @@
 <script module lang="ts">
 	import {
+		columnFacetingFeature,
 		columnFilteringFeature,
+		createFacetedRowModel,
+		createFacetedUniqueValues,
 		createFilteredRowModel,
 		createSortedRowModel,
-		filterFn_equalsString,
-		filterFn_includesString,
+		filterFn_arrHas,
 		globalFilteringFeature,
 		rowSortingFeature,
 		sortFn_alphanumeric,
@@ -20,7 +22,10 @@
 		columnFilteringFeature,
 		globalFilteringFeature,
 		filteredRowModel: createFilteredRowModel(),
-		filterFns: { includesString: filterFn_includesString, equalsString: filterFn_equalsString }
+		filterFns: { arrHas: filterFn_arrHas },
+		columnFacetingFeature,
+		facetedRowModel: createFacetedRowModel(),
+		facetedUniqueValues: createFacetedUniqueValues()
 	});
 
 	export type DataTableFeatures = typeof features;
@@ -36,7 +41,8 @@
 		cellClass?: string;
 		/** Only meaningful when `accessorKey` is set. Defaults to true. */
 		sortable?: boolean;
-		filterFn?: 'equalsString' | 'includesString';
+		/** Renders a filter icon in the header with a checkbox popover over the column's distinct values. */
+		filterFn?: 'arrHas';
 		enableGlobalFilter?: boolean;
 	};
 </script>
@@ -49,9 +55,10 @@
 		FlexRender,
 		renderComponent
 	} from '@tanstack/svelte-table';
-	import type { Snippet } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import SortableHeader from './SortableHeader.svelte';
 	import TableSearch from './TableSearch.svelte';
+	import { setSearchParam } from './url-search-param';
 	import { page } from '$app/state';
 
 	let {
@@ -59,36 +66,40 @@
 		columns: columnDefs,
 		search = true,
 		searchPlaceholder = 'Search…',
-		searchClass = 'mb-4 max-w-sm',
 		onSearchKeydown,
-		onRowClick,
-		filterRow
+		onRowClick
 	}: {
 		data: TData[];
 		columns: DataTableColumn<TData>[];
 		search?: boolean;
 		searchPlaceholder?: string;
-		searchClass?: string;
 		onSearchKeydown?: (e: KeyboardEvent) => void;
 		onRowClick?: (row: TData) => void;
-		filterRow?: Snippet<[typeof table]>;
 	} = $props();
 
 	const helper = createColumnHelper<DataTableFeatures, TData>();
 
-	function renderHeader(col: DataTableColumn<TData>) {
+	function renderHeader(col: DataTableColumn<TData>, id: string) {
 		if (col.header === undefined) return undefined;
 		if (typeof col.header === 'function') return col.header;
 		const label = col.header;
+		const filterable = Boolean(col.filterFn);
 		return (h: HeaderContext<DataTableFeatures, TData, unknown>) =>
-			renderComponent(SortableHeader, { label, header: h.header });
+			renderComponent(SortableHeader, {
+				label,
+				header: h.header,
+				filterable,
+				onFilterChange: filterable
+					? (value: string[] | undefined) => setFilter(id, value)
+					: undefined
+			});
 	}
 
 	const columns = $derived(
 		columnDefs.map((col) => {
 			const id = col.id ?? col.accessorKey;
 			if (!id) throw new Error('DataTable column requires an id or an accessorKey');
-			const header = renderHeader(col);
+			const header = renderHeader(col, id);
 
 			if (col.accessorKey) {
 				const accessorKey = col.accessorKey;
@@ -111,6 +122,16 @@
 		})
 	);
 
+	const initialColumnFilters = untrack(() =>
+		columnDefs
+			.filter((col) => col.filterFn)
+			.flatMap((col) => {
+				const id = col.id ?? col.accessorKey!;
+				const value = page.url.searchParams.get(id);
+				return value ? [{ id, value: value.split(',') }] : [];
+			})
+	);
+
 	const table = createTable({
 		features,
 		get columns() {
@@ -119,21 +140,40 @@
 		get data() {
 			return data;
 		},
-		initialState: { globalFilter: page.url.searchParams.get('search') ?? '' }
+		initialState: {
+			globalFilter: page.url.searchParams.get('search') ?? '',
+			columnFilters: initialColumnFilters
+		}
+	});
+
+	function setFilter(id: string, value: string[] | undefined) {
+		table.getColumn(id)?.setFilterValue(value?.length ? value : undefined);
+		setSearchParam(id, value?.length ? value.join(',') : undefined);
+	}
+
+	let tableEl: HTMLTableElement | null = $state(null);
+	let theadEl: HTMLTableSectionElement | null = $state(null);
+
+	// Pin column widths to their initial (unfiltered) size so sorting/filtering/searching
+	// never reflows the header — that would shift a header's controls out from under the pointer.
+	onMount(() => {
+		const headerRow = theadEl?.rows[0];
+		if (!headerRow || !tableEl) return;
+		for (const cell of headerRow.cells) {
+			cell.style.width = `${cell.offsetWidth}px`;
+		}
+		tableEl.style.tableLayout = 'fixed';
 	});
 </script>
 
 {#if search}
-	<TableSearch
-		{table}
-		placeholder={searchPlaceholder}
-		class={searchClass}
-		onkeydown={onSearchKeydown}
-	/>
+	<div class="mb-4 flex items-center gap-2">
+		<TableSearch {table} placeholder={searchPlaceholder} onkeydown={onSearchKeydown} />
+	</div>
 {/if}
 
-<Table.Root>
-	<Table.Header>
+<Table.Root bind:ref={tableEl}>
+	<Table.Header bind:ref={theadEl}>
 		{#each table.getHeaderGroups() as group (group.id)}
 			<Table.Row>
 				{#each group.headers as header (header.id)}
@@ -143,11 +183,6 @@
 				{/each}
 			</Table.Row>
 		{/each}
-		{#if filterRow}
-			<Table.Row>
-				{@render filterRow(table)}
-			</Table.Row>
-		{/if}
 	</Table.Header>
 	<Table.Body>
 		{#each table.getRowModel().rows as row (row.id)}
