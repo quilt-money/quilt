@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { security, securityType, sector, region, priceSnapshot } from '$lib/server/db/schema';
-import { latestPriceSql } from '$lib/server/db/queries/latestPriceSql';
+import { latestPriceSql, latestSnapshotTimeSql } from '$lib/server/db/queries/latestPriceSql';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
@@ -20,7 +20,8 @@ export async function load() {
 			type: securityType.name,
 			sector: sector.name,
 			region: region.name,
-			latestPrice: latestPriceSql()
+			latestPrice: latestPriceSql(),
+			lastSynced: latestSnapshotTimeSql()
 		})
 		.from(security)
 		.leftJoin(securityType, eq(security.typeId, securityType.id))

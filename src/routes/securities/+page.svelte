@@ -62,7 +62,15 @@
 		},
 		{ accessorKey: 'type', header: 'Type', filterFn: 'arrHas' },
 		{ accessorKey: 'sector', header: 'Sector', filterFn: 'arrHas' },
-		{ accessorKey: 'region', header: 'Region', filterFn: 'arrHas' }
+		{ accessorKey: 'region', header: 'Region', filterFn: 'arrHas' },
+		{
+			accessorKey: 'lastSynced',
+			header: 'Last synced',
+			cell: (ctx) => {
+				const v = ctx.getValue() as string | null;
+				return v != null ? new Date(v).toLocaleString() : '—';
+			}
+		}
 	];
 
 	let open = $state(false);

@@ -14,3 +14,18 @@ export function latestPriceSql() {
         limit 1
     )`;
 }
+
+/**
+ * Correlated subquery for the timestamp of a security's most recent price
+ * snapshot. Must be used alongside a query that already selects from
+ * `security` (or joins it), since it references `security.id` from the
+ * outer query.
+ */
+export function latestSnapshotTimeSql() {
+	return sql<string | null>`(
+        select ${priceSnapshot.snapshotTime} from ${priceSnapshot}
+        where ${priceSnapshot.securityId} = ${security.id}
+        order by ${priceSnapshot.snapshotTime} desc
+        limit 1
+    )`;
+}
