@@ -73,7 +73,7 @@
 
 <div class="p-6">
 	<PageHeader>
-		<h1 class="text-2xl font-semibold">Super</h1>
+		<h1 class="text-2xl font-semibold">Portfolio</h1>
 	</PageHeader>
 
 	<div class="mb-4 flex items-baseline gap-2 rounded-md border bg-muted/50 px-4 py-3">
