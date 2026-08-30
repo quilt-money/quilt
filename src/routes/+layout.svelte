@@ -22,7 +22,7 @@
 			return [{ label: 'Accounts', href: '/accounts' }, { label: name }];
 		}
 		if (path === '/dashboard') return [{ label: 'Dashboard' }];
-		if (path === '/super') return [{ label: 'Super' }];
+		if (path === '/portfolio') return [{ label: 'Portfolio' }];
 		if (path === '/securities') return [{ label: 'Securities' }];
 		return [];
 	});
