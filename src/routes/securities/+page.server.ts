@@ -1,6 +1,13 @@
 import { db } from '$lib/server/db';
-import { security, securityType, sector, region, priceSnapshot } from '$lib/server/db/schema';
-import { and, asc, eq, inArray, max } from 'drizzle-orm';
+import {
+	security,
+	securityType,
+	sector,
+	region,
+	priceSnapshot,
+	holding
+} from '$lib/server/db/schema';
+import { and, asc, countDistinct, eq, inArray, max } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import {
@@ -20,13 +27,23 @@ export async function load() {
 		.groupBy(priceSnapshot.securityId)
 		.as('latest_snapshot');
 
+	const accountCounts = db
+		.select({
+			securityId: holding.securityId,
+			accountCount: countDistinct(holding.accountId).as('account_count')
+		})
+		.from(holding)
+		.groupBy(holding.securityId)
+		.as('account_counts');
+
 	const securitiesWithPricesAndSyncTimes = await db
 		.select({
 			id: security.id,
 			symbol: security.symbol,
 			fullName: security.fullName,
 			latestPrice: priceSnapshot.price,
-			lastSynced: priceSnapshot.snapshotTime
+			lastSynced: priceSnapshot.snapshotTime,
+			accountCount: accountCounts.accountCount
 		})
 		.from(security)
 		.leftJoin(latestSnapshot, eq(security.id, latestSnapshot.securityId))
@@ -37,6 +54,7 @@ export async function load() {
 				eq(priceSnapshot.snapshotTime, latestSnapshot.latestSnapshotTime)
 			)
 		)
+		.leftJoin(accountCounts, eq(security.id, accountCounts.securityId))
 		.orderBy(asc(security.symbol));
 
 	return { securitiesWithPricesAndSyncTimes };

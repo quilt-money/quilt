@@ -59,6 +59,11 @@
 			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
 		},
 		{
+			accessorKey: 'accountCount',
+			header: 'Accounts',
+			cell: (ctx) => (ctx.getValue() as number | null) ?? 0
+		},
+		{
 			accessorKey: 'lastSynced',
 			header: 'Last synced',
 			cell: (ctx) => {
