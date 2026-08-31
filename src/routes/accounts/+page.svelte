@@ -9,19 +9,37 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { resolve } from '$app/paths';
 	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
+	import { renderSnippet } from '@tanstack/svelte-table';
 
 	let { data } = $props();
 
 	let open = $state(false);
 	let name = $state('');
-	let owner = $state('Dan');
 	let tagInput = $state<ReturnType<typeof TagInput> | undefined>(undefined);
 
 	const columns: DataTableColumn<(typeof data.accounts)[number]>[] = [
 		{ accessorKey: 'name', header: 'Name' },
-		{ accessorKey: 'owner', header: 'Owner' }
+		{
+			id: 'tags',
+			header: 'Tags',
+			accessorKey: 'tags',
+			enableGlobalFilter: false,
+			cell: (ctx) => renderSnippet(tagsCell, ctx.getValue() as string[])
+		}
 	];
 </script>
+
+{#snippet tagsCell(tags: string[])}
+	<div class="flex flex-wrap gap-1">
+		{#each tags as t (t)}
+			<span
+				class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium"
+			>
+				{t}
+			</span>
+		{/each}
+	</div>
+{/snippet}
 
 <div class="p-6">
 	<PageHeader>
@@ -55,7 +73,6 @@
 						if (result.type === 'success' || result.type === 'redirect') {
 							open = false;
 							name = '';
-							owner = 'Dan';
 							tagInput?.reset();
 						}
 						update();
@@ -70,18 +87,6 @@
 					<div class="grid gap-2">
 						<Label>Tags</Label>
 						<TagInput bind:this={tagInput} availableTags={data.tags.map((t) => t.name)} />
-					</div>
-					<div class="grid gap-2">
-						<Label for="owner">Owner</Label>
-						<select
-							id="owner"
-							name="owner"
-							bind:value={owner}
-							class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-						>
-							<option value="Dan">Dan</option>
-							<option value="Emily">Emily</option>
-						</select>
 					</div>
 				</div>
 

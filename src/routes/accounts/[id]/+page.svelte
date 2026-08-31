@@ -17,7 +17,6 @@
 			>
 		{/snippet}
 		<h1 class="text-2xl font-semibold">{data.account.name}</h1>
-		<p class="text-sm text-muted-foreground">{data.account.owner}</p>
 	</PageHeader>
 
 	<Table.Root>
