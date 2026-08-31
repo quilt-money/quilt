@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { setSearchParam } from './url-search-param';
 
 	type TableSearchProps = {
 		atoms: { globalFilter: { get: () => unknown } };
@@ -21,7 +20,6 @@
 
 	function setSearch(value: string) {
 		table.setGlobalFilter(value);
-		setSearchParam('search', value);
 	}
 </script>
 

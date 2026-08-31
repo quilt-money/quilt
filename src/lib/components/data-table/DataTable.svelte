@@ -14,6 +14,13 @@
 		type CellContext,
 		type HeaderContext
 	} from '@tanstack/svelte-table';
+	import {
+		parseAsArrayOf,
+		parseAsString,
+		parseAsStringEnum,
+		useQueryState,
+		useQueryStates
+	} from 'nuqs-svelte';
 
 	const features = tableFeatures({
 		rowSortingFeature,
@@ -29,6 +36,11 @@
 	});
 
 	export type DataTableFeatures = typeof features;
+
+	export type DataTableFilterSummary = {
+		search: string;
+		columns: { id: string; values: string[] }[];
+	};
 
 	export type DataTableColumn<TData extends Record<string, unknown>> = {
 		id?: string;
@@ -58,8 +70,6 @@
 	import { onMount, untrack } from 'svelte';
 	import SortableHeader from './SortableHeader.svelte';
 	import TableSearch from './TableSearch.svelte';
-	import { setSearchParam } from './url-search-param';
-	import { page } from '$app/state';
 
 	let {
 		data,
@@ -69,7 +79,9 @@
 		onSearchKeydown,
 		onRowClick,
 		// eslint-disable-next-line no-useless-assignment -- read by the parent via bind:filteredData
-		filteredData = $bindable([])
+		filteredData = $bindable([]),
+		// eslint-disable-next-line no-useless-assignment -- read by the parent via bind:activeFilters
+		activeFilters = $bindable({ search: '', columns: [] })
 	}: {
 		data: TData[];
 		columns: DataTableColumn<TData>[];
@@ -79,6 +91,8 @@
 		onRowClick?: (row: TData) => void;
 		/** Bind to receive the rows currently passing search/column filters, kept in sync as the user filters. */
 		filteredData?: TData[];
+		/** Bind to receive the current search text and active column filters, kept in sync as the user filters. */
+		activeFilters?: DataTableFilterSummary;
 	} = $props();
 
 	const helper = createColumnHelper<DataTableFeatures, TData>();
@@ -126,15 +140,33 @@
 		})
 	);
 
-	const initialColumnFilters = untrack(() =>
-		columnDefs
-			.filter((col) => col.filterFn)
-			.flatMap((col) => {
-				const id = col.id ?? col.accessorKey!;
-				const value = page.url.searchParams.get(id);
-				return value ? [{ id, value: value.split(',') }] : [];
-			})
+	const filterableColumnIds = untrack(() =>
+		columnDefs.filter((col) => col.filterFn).map((col) => col.id ?? col.accessorKey!)
 	);
+
+	const columnFilterParams = useQueryStates(
+		Object.fromEntries(filterableColumnIds.map((id) => [id, parseAsArrayOf(parseAsString)]))
+	);
+
+	const sortParams = useQueryStates({
+		sort: parseAsString,
+		direction: parseAsStringEnum(['asc', 'desc'] as const)
+	});
+
+	const searchParam = useQueryState('search', { defaultValue: '' });
+
+	function columnFiltersFromParams() {
+		return filterableColumnIds.flatMap((id) => {
+			const value = columnFilterParams[id].current;
+			return value?.length ? [{ id, value }] : [];
+		});
+	}
+
+	function sortingFromParams() {
+		const id = sortParams.sort.current;
+		if (!id) return [];
+		return [{ id, desc: sortParams.direction.current === 'desc' }];
+	}
 
 	const table = createTable({
 		features,
@@ -144,19 +176,57 @@
 		get data() {
 			return data;
 		},
-		initialState: {
-			globalFilter: page.url.searchParams.get('search') ?? '',
-			columnFilters: initialColumnFilters
+		state: {
+			get globalFilter() {
+				return searchParam.current;
+			},
+			get columnFilters() {
+				return columnFiltersFromParams();
+			},
+			get sorting() {
+				return sortingFromParams();
+			}
+		},
+		onGlobalFilterChange: (updater) => {
+			const next = typeof updater === 'function' ? updater(searchParam.current) : updater;
+			searchParam.current = next ?? '';
+		},
+		onColumnFiltersChange: (updater) => {
+			const current = columnFiltersFromParams();
+			const next = typeof updater === 'function' ? updater(current) : updater;
+			for (const id of filterableColumnIds) {
+				const value = next.find((f) => f.id === id)?.value as string[] | undefined;
+				columnFilterParams[id].current = value?.length ? value : null;
+			}
+		},
+		onSortingChange: (updater) => {
+			const current = sortingFromParams();
+			const next = typeof updater === 'function' ? updater(current) : updater;
+			const [sort] = next;
+			sortParams.set({
+				sort: sort?.id ?? null,
+				direction: sort ? (sort.desc ? 'desc' : 'asc') : null
+			});
 		}
 	});
 
 	function setFilter(id: string, value: string[] | undefined) {
 		table.getColumn(id)?.setFilterValue(value?.length ? value : undefined);
-		setSearchParam(id, value?.length ? value.join(',') : undefined);
 	}
 
 	$effect(() => {
 		filteredData = table.getRowModel().rows.map((row) => row.original);
+	});
+
+	$effect(() => {
+		const columnFilters = table.atoms.columnFilters.get();
+		activeFilters = {
+			search: (table.atoms.globalFilter.get() as string | undefined) ?? '',
+			columns: columnFilters.flatMap((f) => {
+				const values = f.value as string[] | undefined;
+				return values?.length ? [{ id: f.id, values }] : [];
+			})
+		};
 	});
 
 	let tableEl: HTMLTableElement | null = $state(null);

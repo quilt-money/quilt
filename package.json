@@ -57,6 +57,7 @@
 		"better-sqlite3": "^12.10.0",
 		"csv": "^6.6.3",
 		"echarts": "^6.1.0",
+		"nuqs-svelte": "^1.2.2",
 		"tailwindcss": "^4.3.1"
 	}
 }

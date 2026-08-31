@@ -2,7 +2,10 @@
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { renderComponent } from '@tanstack/svelte-table';
 	import { SvelteSet } from 'svelte/reactivity';
-	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
+	import DataTable, {
+		type DataTableColumn,
+		type DataTableFilterSummary
+	} from '$lib/components/data-table/DataTable.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { formatMoney } from '$lib/format';
 
@@ -14,6 +17,7 @@
 	const rows = $derived([...data.holdings, ...data.unheldSecurities]);
 
 	let filteredRows = $state<(HoldingRow | UnheldSecurityRow)[]>([]);
+	let activeFilters = $state<DataTableFilterSummary>({ search: '', columns: [] });
 
 	let selected = $state(new Set<string>());
 
@@ -69,6 +73,16 @@
 			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
 		}
 	];
+
+	const columnLabels = Object.fromEntries(
+		columns
+			.map((col) => [col.id ?? col.accessorKey, col.header])
+			.filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+	);
+
+	const hasActiveFilters = $derived(
+		activeFilters.search.length > 0 || activeFilters.columns.length > 0
+	);
 </script>
 
 <div class="p-6">
@@ -81,5 +95,27 @@
 		<span class="text-lg font-semibold">{formatMoney(balance)}</span>
 	</div>
 
-	<DataTable data={rows} {columns} searchPlaceholder="Search…" bind:filteredData={filteredRows} />
+	{#if hasActiveFilters}
+		<div class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 px-4 py-3">
+			<span class="text-sm font-medium text-muted-foreground">Filtered by</span>
+			{#if activeFilters.search}
+				<span class="rounded-full border bg-background px-2.5 py-0.5 text-xs font-medium">
+					Search: "{activeFilters.search}"
+				</span>
+			{/if}
+			{#each activeFilters.columns as filter (filter.id)}
+				<span class="rounded-full border bg-background px-2.5 py-0.5 text-xs font-medium">
+					{columnLabels[filter.id] ?? filter.id}: {filter.values.join(', ')}
+				</span>
+			{/each}
+		</div>
+	{/if}
+
+	<DataTable
+		data={rows}
+		{columns}
+		searchPlaceholder="Search…"
+		bind:filteredData={filteredRows}
+		bind:activeFilters
+	/>
 </div>
