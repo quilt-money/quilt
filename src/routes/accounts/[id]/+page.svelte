@@ -17,6 +17,17 @@
 			>
 		{/snippet}
 		<h1 class="text-2xl font-semibold">{data.account.name}</h1>
+		{#if data.tags.length > 0}
+			<div class="mt-1 flex flex-wrap gap-1">
+				{#each data.tags as t (t)}
+					<span
+						class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium"
+					>
+						{t}
+					</span>
+				{/each}
+			</div>
+		{/if}
 	</PageHeader>
 
 	<Table.Root>
@@ -25,7 +36,6 @@
 				<Table.Head>Symbol</Table.Head>
 				<Table.Head>Name</Table.Head>
 				<Table.Head class="text-right">Shares</Table.Head>
-				<Table.Head class="text-right">Current value</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
