@@ -39,7 +39,8 @@
 
 	export type DataTableFilterSummary = {
 		search: string;
-		columns: { id: string; values: string[] }[];
+		clearSearch: () => void;
+		columns: { id: string; values: string[]; clear: () => void }[];
 	};
 
 	export type DataTableColumn<TData extends Record<string, unknown>> = {
@@ -81,7 +82,7 @@
 		// eslint-disable-next-line no-useless-assignment -- read by the parent via bind:filteredData
 		filteredData = $bindable([]),
 		// eslint-disable-next-line no-useless-assignment -- read by the parent via bind:activeFilters
-		activeFilters = $bindable({ search: '', columns: [] })
+		activeFilters = $bindable({ search: '', clearSearch: () => {}, columns: [] })
 	}: {
 		data: TData[];
 		columns: DataTableColumn<TData>[];
@@ -222,9 +223,12 @@
 		const columnFilters = table.atoms.columnFilters.get();
 		activeFilters = {
 			search: (table.atoms.globalFilter.get() as string | undefined) ?? '',
+			clearSearch: () => table.setGlobalFilter(''),
 			columns: columnFilters.flatMap((f) => {
 				const values = f.value as string[] | undefined;
-				return values?.length ? [{ id: f.id, values }] : [];
+				return values?.length
+					? [{ id: f.id, values, clear: () => setFilter(f.id, undefined) }]
+					: [];
 			})
 		};
 	});

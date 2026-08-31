@@ -1,4 +1,5 @@
 <script lang="ts">
+	import XIcon from '@lucide/svelte/icons/x';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { renderComponent } from '@tanstack/svelte-table';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -17,7 +18,11 @@
 	const rows = $derived([...data.holdings, ...data.unheldSecurities]);
 
 	let filteredRows = $state<(HoldingRow | UnheldSecurityRow)[]>([]);
-	let activeFilters = $state<DataTableFilterSummary>({ search: '', columns: [] });
+	let activeFilters = $state<DataTableFilterSummary>({
+		search: '',
+		clearSearch: () => {},
+		columns: []
+	});
 
 	let selected = $state(new Set<string>());
 
@@ -90,26 +95,35 @@
 		<h1 class="text-2xl font-semibold">Portfolio</h1>
 	</PageHeader>
 
-	<div class="mb-4 flex items-baseline gap-2 rounded-md border bg-muted/50 px-4 py-3">
+	<div class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 px-4 py-3">
 		<span class="text-sm font-medium text-muted-foreground">{balanceLabel}</span>
 		<span class="text-lg font-semibold">{formatMoney(balance)}</span>
+		{#if hasActiveFilters}
+			<div class="ml-2 flex flex-wrap items-center gap-2 border-l pl-3">
+				<span class="text-sm font-medium text-muted-foreground">Filtered by</span>
+				{#if activeFilters.search}
+					<button
+						type="button"
+						class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
+						onclick={activeFilters.clearSearch}
+					>
+						Search: "{activeFilters.search}"
+						<XIcon class="size-4" />
+					</button>
+				{/if}
+				{#each activeFilters.columns as filter (filter.id)}
+					<button
+						type="button"
+						class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
+						onclick={filter.clear}
+					>
+						{columnLabels[filter.id] ?? filter.id}: {filter.values.join(' and ')}
+						<XIcon class="size-4" />
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</div>
-
-	{#if hasActiveFilters}
-		<div class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 px-4 py-3">
-			<span class="text-sm font-medium text-muted-foreground">Filtered by</span>
-			{#if activeFilters.search}
-				<span class="rounded-full border bg-background px-2.5 py-0.5 text-xs font-medium">
-					Search: "{activeFilters.search}"
-				</span>
-			{/if}
-			{#each activeFilters.columns as filter (filter.id)}
-				<span class="rounded-full border bg-background px-2.5 py-0.5 text-xs font-medium">
-					{columnLabels[filter.id] ?? filter.id}: {filter.values.join(', ')}
-				</span>
-			{/each}
-		</div>
-	{/if}
 
 	<DataTable
 		data={rows}
