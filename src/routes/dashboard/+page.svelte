@@ -13,7 +13,7 @@
 	);
 
 	function handleItemClick(params: ECElementEvent) {
-		if (typeof params.seriesName === 'string') selectedCategory = params.seriesName;
+		if (typeof params.name === 'string') selectedCategory = params.name;
 	}
 
 	// Validated 8-hue categorical order — see dataviz skill references/palette.md.
@@ -43,9 +43,6 @@
 
 	const option = $derived<EChartsOption>({
 		backgroundColor: 'transparent',
-		grid: { left: 8, right: 8, top: 8, bottom: 8, containLabel: false },
-		xAxis: { type: 'value', show: false },
-		yAxis: { type: 'category', data: [''], show: false },
 		tooltip: {
 			trigger: 'item',
 			valueFormatter: (v) => formatUsd(v as number),
@@ -58,31 +55,31 @@
 			itemHeight: 8,
 			textStyle: { color: '#52514e', fontSize: 12 }
 		},
-		series: data.valueBySector.map((slice, i) => {
-			const isFirst = i === 0;
-			const isLast = i === data.valueBySector.length - 1;
-			const pct = total > 0 ? slice.value / total : 0;
-			return {
-				name: slice.name,
-				type: 'bar',
-				stack: 'total',
-				barWidth: 24,
-				data: [slice.value],
+		series: [
+			{
+				name: 'Value by sector',
+				type: 'pie',
+				radius: '70%',
+				center: ['50%', '46%'],
+				avoidLabelOverlap: true,
 				itemStyle: {
-					color: CATEGORICAL[i % CATEGORICAL.length],
 					borderColor: SURFACE,
-					borderWidth: 2,
-					borderRadius: isFirst ? [4, 0, 0, 4] : isLast ? [0, 4, 4, 0] : 0
+					borderWidth: 2
 				},
 				label: {
-					show: pct >= 0.06,
-					position: 'inside',
-					color: '#fff',
+					show: true,
+					color: '#52514e',
 					fontSize: 12,
-					formatter: () => `${(pct * 100).toFixed(0)}%`
-				}
-			};
-		})
+					formatter: (params) => `${(params.percent ?? 0).toFixed(0)}%`
+				},
+				labelLine: { show: true },
+				data: data.valueBySector.map((slice, i) => ({
+					name: slice.name,
+					value: slice.value,
+					itemStyle: { color: CATEGORICAL[i % CATEGORICAL.length] }
+				}))
+			}
+		]
 	});
 </script>
 
@@ -97,7 +94,7 @@
 
 		<p class="mt-8 mb-2 text-sm text-muted-foreground">Value by sector</p>
 		{#if data.valueBySector.length > 0}
-			<EChart {option} height="120px" onItemClick={handleItemClick} />
+			<EChart {option} height="320px" onItemClick={handleItemClick} />
 		{:else}
 			<p class="py-8 text-center text-sm text-muted-foreground">No holdings yet.</p>
 		{/if}
