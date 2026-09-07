@@ -1,5 +1,8 @@
 <script lang="ts">
+	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 	import XIcon from '@lucide/svelte/icons/x';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { renderComponent } from '@tanstack/svelte-table';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -11,6 +14,8 @@
 	import { formatMoney } from '$lib/format';
 
 	let { data } = $props();
+
+	const fromDashboard = $derived(page.url.searchParams.get('fromDashboard') === 'true');
 
 	type HoldingRow = (typeof data.holdings)[number];
 	type UnheldSecurityRow = (typeof data.unheldSecurities)[number];
@@ -92,7 +97,18 @@
 
 <div class="p-6">
 	<PageHeader>
-		<h1 class="text-2xl font-semibold">Portfolio</h1>
+		<div class="flex items-center gap-2">
+			{#if fromDashboard}
+				<a
+					href={resolve('/dashboard')}
+					aria-label="Back to dashboard"
+					class="flex size-8 items-center justify-center rounded-md hover:bg-accent"
+				>
+					<ArrowLeftIcon class="size-5" />
+				</a>
+			{/if}
+			<h1 class="text-2xl font-semibold">Portfolio</h1>
+		</div>
 	</PageHeader>
 
 	<div class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 px-4 py-3">

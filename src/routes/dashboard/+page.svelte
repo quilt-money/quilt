@@ -1,23 +1,22 @@
 <script lang="ts">
 	import type { EChartsOption, ECElementEvent } from 'echarts';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EChart from '$lib/components/EChart.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
 
 	let { data } = $props();
 
-	let selectedCategory = $state<string | null>(null);
-	const selectedSecurities = $derived(
-		selectedCategory ? (data.categorySecurities[selectedCategory] ?? []) : []
-	);
-
 	function handleItemClick(params: ECElementEvent) {
-		if (typeof params.name === 'string') selectedCategory = params.name;
+		if (typeof params.dataIndex !== 'number') return;
+		const filters = data.valueBySector[params.dataIndex]?.filters ?? [];
+		const search = new SvelteURLSearchParams();
+		for (const f of filters) search.set(f.column, f.value);
+		search.set('fromDashboard', 'true');
+		goto(resolve(`/portfolio?${search.toString()}`));
 	}
 
-	// Validated 8-hue categorical order — see dataviz skill references/palette.md.
-	// Fixed order is the CVD-safety mechanism; never reorder or cycle it.
 	const CATEGORICAL = [
 		'#2a78d6', // blue
 		'#eb6834', // orange
@@ -100,36 +99,3 @@
 		{/if}
 	</div>
 </div>
-
-<Dialog.Root
-	open={selectedCategory !== null}
-	onOpenChange={(open) => !open && (selectedCategory = null)}
->
-	<Dialog.Portal>
-		<Dialog.Overlay />
-		<Dialog.Content>
-			<Dialog.Header>
-				<Dialog.Title>{selectedCategory}</Dialog.Title>
-			</Dialog.Header>
-
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head>Symbol</Table.Head>
-						<Table.Head>Name</Table.Head>
-						<Table.Head class="text-right">Value</Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#each selectedSecurities as s (s.symbol)}
-						<Table.Row>
-							<Table.Cell class="font-mono">{s.symbol}</Table.Cell>
-							<Table.Cell>{s.fullName ?? '—'}</Table.Cell>
-							<Table.Cell class="text-right">{formatUsd(s.value)}</Table.Cell>
-						</Table.Row>
-					{/each}
-				</Table.Body>
-			</Table.Root>
-		</Dialog.Content>
-	</Dialog.Portal>
-</Dialog.Root>

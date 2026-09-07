@@ -6,44 +6,41 @@ const FUND_CATEGORY_BY_REGION: Record<string, string> = {
 	'Emerging Markets': 'Emerging market funds'
 };
 
-type SecurityContribution = { symbol: string; fullName: string | null; value: number };
+type CategoryFilter = { column: 'sector' | 'region' | 'type'; value: string };
 
 export async function load() {
 	const rows = await getHoldingValuesBySector();
 
 	const totals = new Map<string, number>();
-	const securitiesByCategory = new Map<string, Map<string, SecurityContribution>>();
+	const filters = new Map<string, CategoryFilter[]>();
 	for (const row of rows) {
 		if (row.value == null) continue;
-		const name =
-			row.sectorName ??
-			(row.regionName && FUND_CATEGORY_BY_REGION[row.regionName]) ??
-			'Unclassified';
-		totals.set(name, (totals.get(name) ?? 0) + row.value);
-
-		let securities = securitiesByCategory.get(name);
-		if (!securities) {
-			securities = new Map();
-			securitiesByCategory.set(name, securities);
-		}
-		const existing = securities.get(row.symbol);
-		if (existing) {
-			existing.value += row.value;
+		let name: string;
+		let categoryFilters: CategoryFilter[];
+		if (row.sectorName) {
+			name = row.sectorName;
+			categoryFilters = [{ column: 'sector', value: row.sectorName }];
+		} else if (row.regionName && FUND_CATEGORY_BY_REGION[row.regionName]) {
+			name = FUND_CATEGORY_BY_REGION[row.regionName];
+			categoryFilters = [
+				{ column: 'type', value: 'ETF' },
+				{ column: 'region', value: row.regionName }
+			];
 		} else {
-			securities.set(row.symbol, { symbol: row.symbol, fullName: row.fullName, value: row.value });
+			name = 'Unclassified';
+			categoryFilters = [];
 		}
+		totals.set(name, (totals.get(name) ?? 0) + row.value);
+		filters.set(name, categoryFilters);
 	}
 
-	const sorted = [...totals.entries()].map(([name, value]) => ({ name, value }));
+	const valueBySector = [...totals.entries()].map(([name, value]) => ({
+		name,
+		value,
+		filters: filters.get(name) ?? []
+	}));
 
-	const valueBySector = sorted.slice(0, sorted.length);
+	const totalValue = valueBySector.reduce((sum, r) => sum + r.value, 0);
 
-	const categorySecurities: Record<string, SecurityContribution[]> = {};
-	for (const { name } of valueBySector) {
-		categorySecurities[name] = [...(securitiesByCategory.get(name)?.values() ?? [])];
-	}
-
-	const totalValue = sorted.reduce((sum, r) => sum + r.value, 0);
-
-	return { valueBySector, totalValue, categorySecurities };
+	return { valueBySector, totalValue };
 }
