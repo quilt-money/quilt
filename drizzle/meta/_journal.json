@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1787532342583,
-      "tag": "0000_squashed",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1787532827315,
-      "tag": "0001_foamy_mysterio",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1787971337866,
-      "tag": "0002_slow_the_twelve",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1788147732471,
-      "tag": "0003_drop_account_owner",
+      "when": 1788824467860,
+      "tag": "0000_initial_migration",
       "breakpoints": true
     }
   ]

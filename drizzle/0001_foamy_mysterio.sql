@@ -1,1 +1,0 @@
-ALTER TABLE `holding` DROP COLUMN `basis`;

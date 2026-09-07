@@ -1,7 +1,6 @@
 CREATE TABLE `account` (
 	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL,
-	`owner` text NOT NULL
+	`name` text NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `account_name_unique` ON `account` (`name`);--> statement-breakpoint
@@ -18,7 +17,6 @@ CREATE TABLE `holding` (
 	`account_id` text NOT NULL,
 	`security_id` text NOT NULL,
 	`shares` real,
-	`basis` real,
 	FOREIGN KEY (`account_id`) REFERENCES `account`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`security_id`) REFERENCES `security`(`id`) ON UPDATE no action ON DELETE cascade
 );
@@ -38,11 +36,11 @@ CREATE TABLE `price_snapshot` (
 	`id` text PRIMARY KEY NOT NULL,
 	`security_id` text NOT NULL,
 	`price` real NOT NULL,
-	`snapshot_date` text NOT NULL,
+	`snapshot_time` text NOT NULL,
 	FOREIGN KEY (`security_id`) REFERENCES `security`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `price_snapshot_security_id_snapshot_date_unique` ON `price_snapshot` (`security_id`,`snapshot_date`);--> statement-breakpoint
+CREATE UNIQUE INDEX `price_snapshot_security_id_snapshot_time_unique` ON `price_snapshot` (`security_id`,`snapshot_time`);--> statement-breakpoint
 CREATE TABLE `region` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL

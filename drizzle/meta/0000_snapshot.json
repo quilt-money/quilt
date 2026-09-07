@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1ac26e8e-3f8a-4e0a-b915-cc98be902eae",
+  "id": "d7d0c19f-06cb-4cac-ae1a-f06ccf5269e8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -16,13 +16,6 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "owner": {
-          "name": "owner",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -129,13 +122,6 @@
         },
         "shares": {
           "name": "shares",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "basis": {
-          "name": "basis",
           "type": "real",
           "primaryKey": false,
           "notNull": false,
@@ -282,8 +268,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "snapshot_date": {
-          "name": "snapshot_date",
+        "snapshot_time": {
+          "name": "snapshot_time",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -291,11 +277,11 @@
         }
       },
       "indexes": {
-        "price_snapshot_security_id_snapshot_date_unique": {
-          "name": "price_snapshot_security_id_snapshot_date_unique",
+        "price_snapshot_security_id_snapshot_time_unique": {
+          "name": "price_snapshot_security_id_snapshot_time_unique",
           "columns": [
             "security_id",
-            "snapshot_date"
+            "snapshot_time"
           ],
           "isUnique": true
         }
