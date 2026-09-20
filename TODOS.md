@@ -1,0 +1,7 @@
+- better syncing UI
+- how are reconcilations going to work?
+- basic cost tracking with P&L
+- accounts page - edit tags
+- delete account implementation
+- ~~clicking a security from the security table should go to a drill down page where we can mess with region, type, etc.~~
+- some kind of query explorer, similar to metabase but can be tailored for the dataset in the app.
