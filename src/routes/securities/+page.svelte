@@ -2,6 +2,8 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { renderComponent } from '@tanstack/svelte-table';
@@ -39,7 +41,8 @@
 				renderComponent(Checkbox, {
 					checked: allSelected,
 					onCheckedChange: toggleAll,
-					'aria-label': 'Select all'
+					'aria-label': 'Select all',
+					'data-no-nav': true
 				}),
 			cell: (ctx) =>
 				renderComponent(Checkbox, {
@@ -47,7 +50,8 @@
 					value: ctx.row.original.id,
 					checked: selected.has(ctx.row.original.id),
 					onCheckedChange: () => toggle(ctx.row.original.id),
-					'aria-label': `Select ${ctx.row.original.symbol}`
+					'aria-label': `Select ${ctx.row.original.symbol}`,
+					'data-no-nav': true
 				}),
 			enableGlobalFilter: false
 		},
@@ -103,6 +107,7 @@
 			onSearchKeydown={(e) => {
 				if (e.key === 'Enter') e.preventDefault();
 			}}
+			onRowClick={(row) => goto(resolve(`/securities/${row.id}`))}
 		/>
 	</form>
 </div>

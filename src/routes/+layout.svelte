@@ -24,6 +24,11 @@
 		if (path === '/dashboard') return [{ label: 'Dashboard' }];
 		if (path === '/portfolio') return [{ label: 'Portfolio' }];
 		if (path === '/securities') return [{ label: 'Securities' }];
+		if (path.startsWith('/securities/')) {
+			const symbol =
+				(page.data as { security?: { symbol: string } }).security?.symbol ?? 'Security';
+			return [{ label: 'Securities', href: '/securities' }, { label: symbol }];
+		}
 		return [];
 	});
 </script>
