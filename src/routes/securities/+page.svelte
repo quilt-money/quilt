@@ -7,7 +7,8 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { renderComponent } from '@tanstack/svelte-table';
-	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
+	import type { DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
+	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
 	import { formatMoney } from '$lib/format';
 
 	let { data } = $props();
@@ -34,7 +35,7 @@
 	}
 
 	type SecurityRow = (typeof data.securitiesWithPricesAndSyncTimes)[number];
-	const columns: DataTableColumn<SecurityRow>[] = [
+	const leadingColumns: DataTableColumn<SecurityRow>[] = [
 		{
 			id: 'select',
 			header: () =>
@@ -54,9 +55,10 @@
 					'data-no-nav': true
 				}),
 			enableGlobalFilter: false
-		},
-		{ accessorKey: 'symbol', header: 'Symbol', cellClass: 'font-mono' },
-		{ accessorKey: 'fullName', header: 'Name' },
+		}
+	];
+
+	const trailingColumns: DataTableColumn<SecurityRow>[] = [
 		{
 			accessorKey: 'latestPrice',
 			header: 'Latest price',
@@ -100,9 +102,10 @@
 			<h1 class="text-2xl font-semibold">Securities</h1>
 		</PageHeader>
 
-		<DataTable
+		<SecurityDetailTable
 			data={data.securitiesWithPricesAndSyncTimes}
-			{columns}
+			{leadingColumns}
+			{trailingColumns}
 			searchPlaceholder="Search securities…"
 			onSearchKeydown={(e) => {
 				if (e.key === 'Enter') e.preventDefault();

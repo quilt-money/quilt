@@ -32,8 +32,8 @@ export async function load() {
 			accountId: holding.accountId,
 			accountName: account.name,
 			securityId: holding.securityId,
-			securitySymbol: security.symbol,
-			securityFullName: security.fullName,
+			symbol: security.symbol,
+			fullName: security.fullName,
 			type: securityType.name,
 			sector: sector.name,
 			region: region.name,
@@ -52,8 +52,8 @@ export async function load() {
 	const unheldRows = await db
 		.select({
 			securityId: security.id,
-			securitySymbol: security.symbol,
-			securityFullName: security.fullName,
+			symbol: security.symbol,
+			fullName: security.fullName,
 			type: securityType.name,
 			sector: sector.name,
 			region: region.name,

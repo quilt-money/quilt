@@ -6,10 +6,11 @@
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { renderComponent } from '@tanstack/svelte-table';
 	import { SvelteSet } from 'svelte/reactivity';
-	import DataTable, {
-		type DataTableColumn,
-		type DataTableFilterSummary
+	import type {
+		DataTableColumn,
+		DataTableFilterSummary
 	} from '$lib/components/data-table/DataTable.svelte';
+	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { formatMoney } from '$lib/format';
 
@@ -53,7 +54,7 @@
 		sumValue(selected.size > 0 ? filteredRows.filter((r) => selected.has(r.id)) : filteredRows)
 	);
 
-	const columns: DataTableColumn<HoldingRow | UnheldSecurityRow>[] = [
+	const leadingColumns: DataTableColumn<HoldingRow | UnheldSecurityRow>[] = [
 		{
 			id: 'select',
 			header: () =>
@@ -66,29 +67,21 @@
 				renderComponent(Checkbox, {
 					checked: selected.has(ctx.row.original.id),
 					onCheckedChange: () => toggle(ctx.row.original.id),
-					'aria-label': `Select ${ctx.row.original.securitySymbol}`
+					'aria-label': `Select ${ctx.row.original.symbol}`
 				}),
 			enableGlobalFilter: false
 		},
-		{ accessorKey: 'accountName', header: 'Account', filterFn: 'arrHas' },
-		{ accessorKey: 'securitySymbol', header: 'Symbol', cellClass: 'font-mono' },
-		{ accessorKey: 'securityFullName', header: 'Name' },
+		{ accessorKey: 'accountName', header: 'Account', filterFn: 'arrHas' }
+	];
+
+	const trailingColumns: DataTableColumn<HoldingRow | UnheldSecurityRow>[] = [
 		{ accessorKey: 'shares', header: 'Shares' },
-		{ accessorKey: 'type', header: 'Type', filterFn: 'arrHas' },
-		{ accessorKey: 'sector', header: 'Sector', filterFn: 'arrHas' },
-		{ accessorKey: 'region', header: 'Region', filterFn: 'arrHas' },
 		{
 			accessorKey: 'totalValue',
 			header: 'Total value',
 			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
 		}
 	];
-
-	const columnLabels = Object.fromEntries(
-		columns
-			.map((col) => [col.id ?? col.accessorKey, col.header])
-			.filter((entry): entry is [string, string] => typeof entry[1] === 'string')
-	);
 
 	const hasActiveFilters = $derived(
 		activeFilters.search.length > 0 || activeFilters.columns.length > 0
@@ -133,7 +126,7 @@
 						class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
 						onclick={filter.clear}
 					>
-						{columnLabels[filter.id] ?? filter.id}: {filter.values.join(' and ')}
+						{filter.label}: {filter.values.join(' and ')}
 						<XIcon class="size-4" />
 					</button>
 				{/each}
@@ -141,9 +134,10 @@
 		{/if}
 	</div>
 
-	<DataTable
+	<SecurityDetailTable
 		data={rows}
-		{columns}
+		{leadingColumns}
+		{trailingColumns}
 		searchPlaceholder="Search…"
 		bind:filteredData={filteredRows}
 		bind:activeFilters

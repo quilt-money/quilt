@@ -41,11 +41,17 @@ export async function load() {
 			id: security.id,
 			symbol: security.symbol,
 			fullName: security.fullName,
+			type: securityType.name,
+			sector: sector.name,
+			region: region.name,
 			latestPrice: priceSnapshot.price,
 			lastSynced: priceSnapshot.snapshotTime,
 			accountCount: accountCounts.accountCount
 		})
 		.from(security)
+		.leftJoin(securityType, eq(security.typeId, securityType.id))
+		.leftJoin(sector, eq(security.sectorId, sector.id))
+		.leftJoin(region, eq(security.regionId, region.id))
 		.leftJoin(latestSnapshot, eq(security.id, latestSnapshot.securityId))
 		.leftJoin(
 			priceSnapshot,

@@ -40,7 +40,7 @@
 	export type DataTableFilterSummary = {
 		search: string;
 		clearSearch: () => void;
-		columns: { id: string; values: string[]; clear: () => void }[];
+		columns: { id: string; label: string; values: string[]; clear: () => void }[];
 	};
 
 	export type DataTableColumn<TData extends Record<string, unknown>> = {
@@ -226,9 +226,10 @@
 			clearSearch: () => table.setGlobalFilter(''),
 			columns: columnFilters.flatMap((f) => {
 				const values = f.value as string[] | undefined;
-				return values?.length
-					? [{ id: f.id, values, clear: () => setFilter(f.id, undefined) }]
-					: [];
+				if (!values?.length) return [];
+				const header = columnDefs.find((c) => (c.id ?? c.accessorKey) === f.id)?.header;
+				const label = typeof header === 'string' ? header : f.id;
+				return [{ id: f.id, label, values, clear: () => setFilter(f.id, undefined) }];
 			})
 		};
 	});

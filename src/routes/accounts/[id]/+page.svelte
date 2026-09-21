@@ -1,9 +1,22 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
+	import type { DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
+	import { formatMoney } from '$lib/format';
 
 	let { data } = $props();
+
+	type HoldingRow = (typeof data.holdings)[number];
+
+	const trailingColumns: DataTableColumn<HoldingRow>[] = [
+		{ accessorKey: 'shares', header: 'Shares' },
+		{
+			accessorKey: 'totalValue',
+			header: 'Total value',
+			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
+		}
+	];
 </script>
 
 <div class="p-6">
@@ -19,39 +32,20 @@
 		<h1 class="text-2xl font-semibold">{data.account.name}</h1>
 		{#if data.tags.length > 0}
 			<div class="mt-1 flex flex-wrap gap-1">
-				{#each data.tags as t (t)}
+				{#each data.tags as tag (tag)}
 					<span
 						class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium"
 					>
-						{t}
+						{tag}
 					</span>
 				{/each}
 			</div>
 		{/if}
 	</PageHeader>
 
-	<Table.Root>
-		<Table.Header>
-			<Table.Row>
-				<Table.Head>Symbol</Table.Head>
-				<Table.Head>Name</Table.Head>
-				<Table.Head class="text-right">Shares</Table.Head>
-			</Table.Row>
-		</Table.Header>
-		<Table.Body>
-			{#each data.holdings as h (h.id)}
-				<Table.Row>
-					<Table.Cell class="font-mono">{h.symbol}</Table.Cell>
-					<Table.Cell class="text-muted-foreground">{h.fullName ?? '—'}</Table.Cell>
-					<Table.Cell class="text-right">{h.shares ?? '—'}</Table.Cell>
-				</Table.Row>
-			{:else}
-				<Table.Row>
-					<Table.Cell colspan={4} class="text-center text-muted-foreground py-8">
-						No holdings yet.
-					</Table.Cell>
-				</Table.Row>
-			{/each}
-		</Table.Body>
-	</Table.Root>
+	<SecurityDetailTable
+		data={data.holdings}
+		{trailingColumns}
+		searchPlaceholder={`Search holdings for ${data.account.name}...`}
+	/>
 </div>
