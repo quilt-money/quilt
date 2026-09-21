@@ -6,10 +6,11 @@
 	import { resolve } from '$app/paths';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { renderComponent } from '@tanstack/svelte-table';
+	import { renderComponent, renderSnippet } from '@tanstack/svelte-table';
 	import type { DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
 	import { formatMoney } from '$lib/format';
+	import { portfolioHref } from '$lib/portfolio-filter';
 
 	let { data } = $props();
 
@@ -65,9 +66,14 @@
 			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
 		},
 		{
-			accessorKey: 'accountCount',
+			accessorKey: 'accounts',
 			header: 'Accounts',
-			cell: (ctx) => (ctx.getValue() as number | null) ?? 0
+			enableGlobalFilter: false,
+			cell: (ctx) =>
+				renderSnippet(accountsCell, {
+					accounts: ctx.getValue() as { id: string; name: string }[],
+					symbol: ctx.row.original.symbol
+				})
 		},
 		{
 			accessorKey: 'lastSynced',
@@ -79,6 +85,27 @@
 		}
 	];
 </script>
+
+{#snippet accountsCell({
+	accounts,
+	symbol
+}: {
+	accounts: { id: string; name: string }[];
+	symbol: string;
+})}
+	<div class="flex flex-wrap gap-1" data-no-nav>
+		{#each accounts as account (account.id)}
+			<a
+				href={portfolioHref(account.name, symbol)}
+				class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium hover:bg-secondary/80"
+			>
+				{account.name}
+			</a>
+		{:else}
+			<span class="text-muted-foreground">—</span>
+		{/each}
+	</div>
+{/snippet}
 
 <div class="p-6">
 	<form

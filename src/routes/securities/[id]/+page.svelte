@@ -5,10 +5,9 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { formatMoney } from '$lib/format';
 	import { enhance } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { createSerializer, parseAsArrayOf, parseAsString } from 'nuqs-svelte';
+	import { portfolioHref } from '$lib/portfolio-filter';
 
 	let { data } = $props();
 
@@ -34,19 +33,6 @@
 			([id, name]) => ({ id, name })
 		)
 	);
-
-	const serializePortfolioParams = createSerializer({
-		accountName: parseAsArrayOf(parseAsString),
-		search: parseAsString
-	});
-
-	function portfolioHref(accountName: string) {
-		const query = serializePortfolioParams({
-			accountName: [accountName],
-			search: data.security.symbol
-		});
-		return resolve(`/portfolio?${query.slice(1)}`);
-	}
 
 	const selectClass =
 		'h-11 w-full appearance-none rounded-md border border-input bg-transparent px-4 pr-10 text-base shadow-xs transition-colors outline-none hover:border-ring focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30';
@@ -106,7 +92,7 @@
 					<div class="flex flex-wrap gap-1">
 						{#each accountsHolding as account (account.id)}
 							<a
-								href={portfolioHref(account.name)}
+								href={portfolioHref(account.name, data.security.symbol)}
 								class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium hover:bg-secondary/80"
 							>
 								{account.name}

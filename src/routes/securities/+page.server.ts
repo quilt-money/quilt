@@ -5,9 +5,10 @@ import {
 	sector,
 	region,
 	priceSnapshot,
-	holding
+	holding,
+	account
 } from '$lib/server/db/schema';
-import { and, asc, countDistinct, eq, inArray, max } from 'drizzle-orm';
+import { and, asc, eq, inArray, max } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import {
@@ -27,41 +28,55 @@ export async function load() {
 		.groupBy(priceSnapshot.securityId)
 		.as('latest_snapshot');
 
-	const accountCounts = db
-		.select({
-			securityId: holding.securityId,
-			accountCount: countDistinct(holding.accountId).as('account_count')
-		})
-		.from(holding)
-		.groupBy(holding.securityId)
-		.as('account_counts');
-
-	const securitiesWithPricesAndSyncTimes = await db
-		.select({
-			id: security.id,
-			symbol: security.symbol,
-			fullName: security.fullName,
-			type: securityType.name,
-			sector: sector.name,
-			region: region.name,
-			latestPrice: priceSnapshot.price,
-			lastSynced: priceSnapshot.snapshotTime,
-			accountCount: accountCounts.accountCount
-		})
-		.from(security)
-		.leftJoin(securityType, eq(security.typeId, securityType.id))
-		.leftJoin(sector, eq(security.sectorId, sector.id))
-		.leftJoin(region, eq(security.regionId, region.id))
-		.leftJoin(latestSnapshot, eq(security.id, latestSnapshot.securityId))
-		.leftJoin(
-			priceSnapshot,
-			and(
-				eq(priceSnapshot.securityId, latestSnapshot.securityId),
-				eq(priceSnapshot.snapshotTime, latestSnapshot.latestSnapshotTime)
+	const [securityRows, holdingAccountRows] = await Promise.all([
+		db
+			.select({
+				id: security.id,
+				symbol: security.symbol,
+				fullName: security.fullName,
+				type: securityType.name,
+				sector: sector.name,
+				region: region.name,
+				latestPrice: priceSnapshot.price,
+				lastSynced: priceSnapshot.snapshotTime
+			})
+			.from(security)
+			.leftJoin(securityType, eq(security.typeId, securityType.id))
+			.leftJoin(sector, eq(security.sectorId, sector.id))
+			.leftJoin(region, eq(security.regionId, region.id))
+			.leftJoin(latestSnapshot, eq(security.id, latestSnapshot.securityId))
+			.leftJoin(
+				priceSnapshot,
+				and(
+					eq(priceSnapshot.securityId, latestSnapshot.securityId),
+					eq(priceSnapshot.snapshotTime, latestSnapshot.latestSnapshotTime)
+				)
 			)
-		)
-		.leftJoin(accountCounts, eq(security.id, accountCounts.securityId))
-		.orderBy(asc(security.symbol));
+			.orderBy(asc(security.symbol)),
+		db
+			.select({
+				securityId: holding.securityId,
+				accountId: account.id,
+				accountName: account.name
+			})
+			.from(holding)
+			.innerJoin(account, eq(holding.accountId, account.id))
+			.orderBy(account.name)
+	]);
+
+	const accountsBySecurityId = new Map<string, { id: string; name: string }[]>();
+	for (const r of holdingAccountRows) {
+		const accounts = accountsBySecurityId.get(r.securityId) ?? [];
+		if (!accounts.some((a) => a.id === r.accountId)) {
+			accounts.push({ id: r.accountId, name: r.accountName });
+		}
+		accountsBySecurityId.set(r.securityId, accounts);
+	}
+
+	const securitiesWithPricesAndSyncTimes = securityRows.map((r) => ({
+		...r,
+		accounts: accountsBySecurityId.get(r.id) ?? []
+	}));
 
 	return { securitiesWithPricesAndSyncTimes };
 }
