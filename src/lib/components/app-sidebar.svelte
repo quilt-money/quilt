@@ -3,10 +3,12 @@
 	import PiggyBankIcon from '@lucide/svelte/icons/piggy-bank';
 	import WalletIcon from '@lucide/svelte/icons/wallet';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
+	import TerminalIcon from '@lucide/svelte/icons/terminal';
 
 	const navItems = [
 		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboardIcon },
-		{ title: 'Portfolio', url: '/portfolio', icon: PiggyBankIcon }
+		{ title: 'Portfolio', url: '/portfolio', icon: PiggyBankIcon },
+		{ title: 'Reports', url: '/reports', icon: TerminalIcon }
 	] as const;
 
 	const dataNavItems = [
@@ -33,9 +35,7 @@
 
 <Sidebar.Root bind:ref collapsible="icon" {...restProps}>
 	<Sidebar.Header>
-		<h1
-			class="px-2 py-1 text-lg font-bold tracking-tight group-data-[collapsible=icon]:hidden"
-		>
+		<h1 class="px-2 py-1 text-lg font-bold tracking-tight group-data-[collapsible=icon]:hidden">
 			Ignus
 		</h1>
 	</Sidebar.Header>
