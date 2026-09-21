@@ -5,8 +5,10 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { formatMoney } from '$lib/format';
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { createSerializer, parseAsArrayOf, parseAsString } from 'nuqs-svelte';
 
 	let { data } = $props();
 
@@ -27,9 +29,24 @@
 		return options.find((o) => o.id === id)?.name ?? '—';
 	}
 
-	const accountsHolding = $derived([
-		...new Map(data.holdings.map((h) => [h.accountId, h.accountName])).values()
-	]);
+	const accountsHolding = $derived(
+		[...new Map(data.holdings.map((h) => [h.accountId, h.accountName])).entries()].map(
+			([id, name]) => ({ id, name })
+		)
+	);
+
+	const serializePortfolioParams = createSerializer({
+		accountName: parseAsArrayOf(parseAsString),
+		search: parseAsString
+	});
+
+	function portfolioHref(accountName: string) {
+		const query = serializePortfolioParams({
+			accountName: [accountName],
+			search: data.security.symbol
+		});
+		return resolve(`/portfolio?${query.slice(1)}`);
+	}
 
 	const selectClass =
 		'h-11 w-full appearance-none rounded-md border border-input bg-transparent px-4 pr-10 text-base shadow-xs transition-colors outline-none hover:border-ring focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30';
@@ -87,12 +104,13 @@
 				<Table.Cell>{nameOf(data.regions, data.security.regionId)}</Table.Cell>
 				<Table.Cell>
 					<div class="flex flex-wrap gap-1">
-						{#each accountsHolding as name (name)}
-							<span
-								class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium"
+						{#each accountsHolding as account (account.id)}
+							<a
+								href={portfolioHref(account.name)}
+								class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium hover:bg-secondary/80"
 							>
-								{name}
-							</span>
+								{account.name}
+							</a>
 						{:else}
 							<span class="text-muted-foreground">—</span>
 						{/each}
