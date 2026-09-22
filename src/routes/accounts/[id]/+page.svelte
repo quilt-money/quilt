@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
+	import TagInput from '$lib/components/TagInput.svelte';
 	import type { DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 	import { formatMoney } from '$lib/format';
+	import { enhance } from '$app/forms';
 
 	let { data } = $props();
 
@@ -17,13 +22,15 @@
 			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
 		}
 	];
+
+	let editOpen = $state(false);
 </script>
 
 <div class="p-6">
 	<PageHeader>
 		{#snippet actions()}
 			<Button href="/accounts/{data.account.id}/upload">Upload</Button>
-			<Button href="/rec/{data.account.id}/upload" disabled={true}>Reconcile</Button>
+			<Button variant="outline" onclick={() => (editOpen = true)}>Edit</Button>
 
 			<Button href="/accounts/{data.account.id}/delete" disabled={true} variant="destructive"
 				>Delete</Button
@@ -49,3 +56,48 @@
 		searchPlaceholder={`Search holdings for ${data.account.name}...`}
 	/>
 </div>
+
+<Drawer.Root bind:open={editOpen} direction="right">
+	<Drawer.Portal>
+		<Drawer.Overlay />
+		<Drawer.Content>
+			<Drawer.Header>
+				<Drawer.Title>Edit account</Drawer.Title>
+			</Drawer.Header>
+
+			{#key editOpen}
+				<form
+					method="POST"
+					action="?/update"
+					class="flex flex-1 flex-col overflow-y-auto"
+					use:enhance={() => {
+						return ({ result, update }) => {
+							if (result.type === 'success' || result.type === 'redirect') {
+								editOpen = false;
+							}
+							update();
+						};
+					}}
+				>
+					<div class="grid gap-4 px-4">
+						<div class="grid gap-2">
+							<Label for="edit-name">Account name</Label>
+							<Input id="edit-name" name="name" value={data.account.name} required />
+						</div>
+						<div class="grid gap-2">
+							<Label>Tags</Label>
+							<TagInput availableTags={data.allTags} initialTags={data.tags} />
+						</div>
+					</div>
+
+					<Drawer.Footer>
+						<Button type="submit">Save</Button>
+						<Button type="button" variant="outline" onclick={() => (editOpen = false)}
+							>Cancel</Button
+						>
+					</Drawer.Footer>
+				</form>
+			{/key}
+		</Drawer.Content>
+	</Drawer.Portal>
+</Drawer.Root>

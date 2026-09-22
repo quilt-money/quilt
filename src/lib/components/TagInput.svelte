@@ -1,16 +1,17 @@
 <script lang="ts">
 	let {
 		availableTags = [],
+		initialTags = [],
 		inputName = 'tags'
 	}: {
 		availableTags: string[];
+		initialTags?: string[];
 		inputName?: string;
 	} = $props();
 
-	let selected = $state<string[]>([]);
+	let selected = $state<string[]>([...initialTags]);
 	let inputValue = $state('');
 	let showDropdown = $state(false);
-	let highlightedIndex = $derived(-1);
 	let inputEl = $state<HTMLInputElement | undefined>(undefined);
 
 	let suggestions = $derived(
@@ -29,19 +30,11 @@
 
 	let dropdownVisible = $derived(showDropdown && (suggestions.length > 0 || showAddNew));
 
-	// Total items in the dropdown: suggestions + optional "add new"
-	let dropdownCount = $derived(suggestions.length + (showAddNew ? 1 : 0));
-
-	$effect(() => {
-		highlightedIndex = -1;
-	});
-
 	function addTag(tag: string) {
 		const t = tag.trim();
 		if (!t || selected.some((s) => s.toLowerCase() === t.toLowerCase())) return;
 		selected = [...selected, t];
 		inputValue = '';
-		highlightedIndex = -1;
 	}
 
 	function removeTag(tag: string) {
@@ -50,29 +43,15 @@
 
 	function onKeydown(e: KeyboardEvent) {
 		if (e.key === 'ArrowDown') {
-			e.preventDefault();
 			if (!dropdownVisible) {
+				e.preventDefault();
 				showDropdown = true;
-				return;
 			}
-			highlightedIndex = (highlightedIndex + 1) % dropdownCount;
-		} else if (e.key === 'ArrowUp') {
-			e.preventDefault();
-			highlightedIndex = (highlightedIndex - 1 + dropdownCount) % dropdownCount;
 		} else if (e.key === 'Enter') {
 			e.preventDefault();
-			if (highlightedIndex >= 0 && dropdownVisible) {
-				if (highlightedIndex < suggestions.length) {
-					addTag(suggestions[highlightedIndex]);
-				} else {
-					addTag(trimmed);
-				}
-			} else if (trimmed) {
-				addTag(trimmed);
-			}
+			if (trimmed) addTag(trimmed);
 		} else if (e.key === 'Escape') {
 			showDropdown = false;
-			highlightedIndex = -1;
 		} else if (e.key === 'Backspace' && !inputValue && selected.length > 0) {
 			selected = selected.slice(0, -1);
 		}
@@ -130,13 +109,10 @@
 		<div
 			class="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md"
 		>
-			{#each suggestions as tag, i (tag)}
+			{#each suggestions as tag (tag)}
 				<button
 					type="button"
-					class="w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground {highlightedIndex ===
-					i
-						? 'bg-accent text-accent-foreground'
-						: ''}"
+					class="w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
 					onmousedown={(e) => {
 						e.preventDefault();
 						addTag(tag);
@@ -148,10 +124,7 @@
 			{#if showAddNew}
 				<button
 					type="button"
-					class="w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground text-muted-foreground {highlightedIndex ===
-					suggestions.length
-						? 'bg-accent text-accent-foreground'
-						: ''}"
+					class="w-full px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 					onmousedown={(e) => {
 						e.preventDefault();
 						addTag(trimmed);

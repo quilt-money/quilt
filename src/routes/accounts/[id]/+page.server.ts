@@ -11,7 +11,7 @@ import {
 	tag
 } from '$lib/server/db/schema';
 import { and, eq, max } from 'drizzle-orm';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 
 export async function load({ params }) {
 	const [acct] = await db.select().from(account).where(eq(account.id, params.id)).limit(1);
@@ -26,7 +26,7 @@ export async function load({ params }) {
 		.groupBy(priceSnapshot.securityId)
 		.as('latest_snapshot');
 
-	const [holdingRows, tags] = await Promise.all([
+	const [holdingRows, tags, allTags] = await Promise.all([
 		db
 			.select({
 				id: holding.id,
@@ -58,7 +58,8 @@ export async function load({ params }) {
 			.from(accountTag)
 			.innerJoin(tag, eq(accountTag.tagId, tag.id))
 			.where(eq(accountTag.accountId, params.id))
-			.orderBy(tag.name)
+			.orderBy(tag.name),
+		db.select({ name: tag.name }).from(tag).orderBy(tag.name)
 	]);
 
 	const holdings = holdingRows.map((r) => ({
@@ -66,5 +67,42 @@ export async function load({ params }) {
 		totalValue: r.shares != null && r.price != null ? r.shares * r.price : null
 	}));
 
-	return { account: acct, holdings, tags: tags.map((t) => t.name) };
+	return {
+		account: acct,
+		holdings,
+		tags: tags.map((t) => t.name),
+		allTags: allTags.map((t) => t.name)
+	};
 }
+
+export const actions = {
+	update: async ({ request, params }) => {
+		const data = await request.formData();
+		const name = data.get('name')?.toString().trim();
+		const tagsRaw = data.get('tags')?.toString();
+
+		if (!name) return fail(400, { error: 'Name is required' });
+
+		const tagNames: string[] = tagsRaw ? JSON.parse(tagsRaw) : [];
+
+		await db.update(account).set({ name }).where(eq(account.id, params.id));
+		await db.delete(accountTag).where(eq(accountTag.accountId, params.id));
+
+		if (tagNames.length > 0) {
+			const tagIds: string[] = [];
+			for (const tagName of tagNames) {
+				const existing = await db.select().from(tag).where(eq(tag.name, tagName)).limit(1);
+				if (existing.length > 0) {
+					tagIds.push(existing[0].id);
+				} else {
+					const [{ tagId }] = await db
+						.insert(tag)
+						.values({ name: tagName })
+						.returning({ tagId: tag.id });
+					tagIds.push(tagId);
+				}
+			}
+			await db.insert(accountTag).values(tagIds.map((tagId) => ({ accountId: params.id, tagId })));
+		}
+	}
+};
