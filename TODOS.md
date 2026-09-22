@@ -1,7 +1,9 @@
 - better syncing UI
 - how are reconcilations going to work?
 - basic cost tracking with P&L
-- accounts page - edit tags
-- delete account implementation
+- ~~accounts page - edit tags~~
+- ~~delete account implementation~~
 - ~~clicking a security from the security table should go to a drill down page where we can mess with region, type, etc.~~
-- some kind of query explorer, similar to metabase but can be tailored for the dataset in the app.
+- some kind of query explorer, similar to metabase but can be tailored for the dataset in the app. -- IN BRANCH (reports)
+- figure out how to get rid of the accounts table (merge it with a filtered portfolio table instead)?
+- we reuse the super query (basically joining all tables) many times. Figure out how to reuse it (will help with reports too)
