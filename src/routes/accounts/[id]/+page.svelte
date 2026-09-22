@@ -9,6 +9,7 @@
 	import type { DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 	import { formatMoney } from '$lib/format';
 	import { enhance } from '$app/forms';
+	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
@@ -74,6 +75,7 @@
 						return ({ result, update }) => {
 							if (result.type === 'success' || result.type === 'redirect') {
 								editOpen = false;
+								toast.success('Account updated');
 							}
 							update();
 						};
