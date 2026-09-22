@@ -11,7 +11,7 @@ import {
 	tag
 } from '$lib/server/db/schema';
 import { and, eq, max } from 'drizzle-orm';
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 
 export async function load({ params }) {
 	const [acct] = await db.select().from(account).where(eq(account.id, params.id)).limit(1);
@@ -104,5 +104,10 @@ export const actions = {
 			}
 			await db.insert(accountTag).values(tagIds.map((tagId) => ({ accountId: params.id, tagId })));
 		}
+	},
+
+	delete: async ({ params }) => {
+		await db.delete(account).where(eq(account.id, params.id));
+		redirect(303, '/accounts');
 	}
 };

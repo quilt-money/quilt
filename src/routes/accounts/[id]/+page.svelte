@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -25,6 +26,7 @@
 	];
 
 	let editOpen = $state(false);
+	let deleteOpen = $state(false);
 </script>
 
 <div class="p-6">
@@ -33,9 +35,7 @@
 			<Button href="/accounts/{data.account.id}/upload">Upload</Button>
 			<Button variant="outline" onclick={() => (editOpen = true)}>Edit</Button>
 
-			<Button href="/accounts/{data.account.id}/delete" disabled={true} variant="destructive"
-				>Delete</Button
-			>
+			<Button variant="destructive" onclick={() => (deleteOpen = true)}>Delete</Button>
 		{/snippet}
 		<h1 class="text-2xl font-semibold">{data.account.name}</h1>
 		{#if data.tags.length > 0}
@@ -103,3 +103,38 @@
 		</Drawer.Content>
 	</Drawer.Portal>
 </Drawer.Root>
+
+<Dialog.Root bind:open={deleteOpen}>
+	<Dialog.Portal>
+		<Dialog.Overlay />
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>Delete account</Dialog.Title>
+				<Dialog.Description>
+					This will permanently delete "{data.account.name}" and all of its holdings. This action
+					cannot be undone.
+				</Dialog.Description>
+			</Dialog.Header>
+
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					return ({ result, update }) => {
+						if (result.type === 'redirect') {
+							toast.success('Account deleted');
+						}
+						update();
+					};
+				}}
+			>
+				<Dialog.Footer>
+					<Button type="button" variant="outline" onclick={() => (deleteOpen = false)}
+						>Cancel</Button
+					>
+					<Button type="submit" variant="destructive">Delete</Button>
+				</Dialog.Footer>
+			</form>
+		</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>
