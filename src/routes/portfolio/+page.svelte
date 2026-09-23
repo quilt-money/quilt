@@ -19,11 +19,8 @@
 	const fromDashboard = $derived(page.url.searchParams.get('fromDashboard') === 'true');
 
 	type HoldingRow = (typeof data.holdings)[number];
-	type UnheldSecurityRow = (typeof data.unheldSecurities)[number];
 
-	const rows = $derived([...data.holdings, ...data.unheldSecurities]);
-
-	let filteredRows = $state<(HoldingRow | UnheldSecurityRow)[]>([]);
+	let filteredRows = $state<HoldingRow[]>([]);
 	let activeFilters = $state<DataTableFilterSummary>({
 		search: '',
 		clearSearch: () => {},
@@ -32,10 +29,10 @@
 
 	let selected = $state(new Set<string>());
 
-	let allSelected = $derived(rows.length > 0 && selected.size === rows.length);
+	let allSelected = $derived(data.holdings.length > 0 && selected.size === data.holdings.length);
 
 	function toggleAll() {
-		selected = allSelected ? new Set() : new Set(rows.map((r) => r.id));
+		selected = allSelected ? new Set() : new Set(data.holdings.map((r) => r.id));
 	}
 
 	function toggle(id: string) {
@@ -45,7 +42,7 @@
 		selected = next;
 	}
 
-	function sumValue(rs: (HoldingRow | UnheldSecurityRow)[]) {
+	function sumValue(rs: HoldingRow[]) {
 		return rs.reduce((sum, r) => sum + (r.totalValue ?? 0), 0);
 	}
 
@@ -54,7 +51,7 @@
 		sumValue(selected.size > 0 ? filteredRows.filter((r) => selected.has(r.id)) : filteredRows)
 	);
 
-	const leadingColumns: DataTableColumn<HoldingRow | UnheldSecurityRow>[] = [
+	const leadingColumns: DataTableColumn<HoldingRow>[] = [
 		{
 			id: 'select',
 			header: () =>
@@ -74,7 +71,7 @@
 		{ accessorKey: 'accountName', header: 'Account', filterFn: 'arrHas' }
 	];
 
-	const trailingColumns: DataTableColumn<HoldingRow | UnheldSecurityRow>[] = [
+	const trailingColumns: DataTableColumn<HoldingRow>[] = [
 		{ accessorKey: 'shares', header: 'Shares' },
 		{
 			accessorKey: 'totalValue',
@@ -135,7 +132,7 @@
 	</div>
 
 	<SecurityDetailTable
-		data={rows}
+		data={data.holdings}
 		{leadingColumns}
 		{trailingColumns}
 		searchPlaceholder="Search…"

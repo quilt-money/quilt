@@ -8,7 +8,7 @@ import {
 	holding,
 	account
 } from '$lib/server/db/schema';
-import { and, asc, eq, inArray, max } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import {
@@ -17,42 +17,11 @@ import {
 	normalizeCompanyName,
 	regionBucketFor
 } from '$lib/server/fmp';
+import { securityRows } from '$lib/server/db/queries/securities';
 
 export async function load() {
-	const latestSnapshot = db
-		.select({
-			securityId: priceSnapshot.securityId,
-			latestSnapshotTime: max(priceSnapshot.snapshotTime).as('latest_snapshot_time')
-		})
-		.from(priceSnapshot)
-		.groupBy(priceSnapshot.securityId)
-		.as('latest_snapshot');
-
-	const [securityRows, holdingAccountRows] = await Promise.all([
-		db
-			.select({
-				id: security.id,
-				symbol: security.symbol,
-				fullName: security.fullName,
-				type: securityType.name,
-				sector: sector.name,
-				region: region.name,
-				latestPrice: priceSnapshot.price,
-				lastSynced: priceSnapshot.snapshotTime
-			})
-			.from(security)
-			.leftJoin(securityType, eq(security.typeId, securityType.id))
-			.leftJoin(sector, eq(security.sectorId, sector.id))
-			.leftJoin(region, eq(security.regionId, region.id))
-			.leftJoin(latestSnapshot, eq(security.id, latestSnapshot.securityId))
-			.leftJoin(
-				priceSnapshot,
-				and(
-					eq(priceSnapshot.securityId, latestSnapshot.securityId),
-					eq(priceSnapshot.snapshotTime, latestSnapshot.latestSnapshotTime)
-				)
-			)
-			.orderBy(asc(security.symbol)),
+	const [rows, holdingAccountRows] = await Promise.all([
+		securityRows().orderBy(asc(security.symbol)),
 		db
 			.select({
 				securityId: holding.securityId,
@@ -73,8 +42,9 @@ export async function load() {
 		accountsBySecurityId.set(r.securityId, accounts);
 	}
 
-	const securitiesWithPricesAndSyncTimes = securityRows.map((r) => ({
+	const securitiesWithPricesAndSyncTimes = rows.map(({ price, ...r }) => ({
 		...r,
+		latestPrice: price,
 		accounts: accountsBySecurityId.get(r.id) ?? []
 	}));
 
