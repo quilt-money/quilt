@@ -8,9 +8,10 @@ export async function load() {
 	// Value of a single holding row: that account's shares times the security's
 	// latest price. Computed in JS since drizzle's query builder has no
 	// cross-column multiply operator outside a raw sql tag.
-	const holdings = heldRows.map((r) => ({
-		...r,
-		totalValue: r.shares != null && r.price != null ? r.shares * r.price : null
+	const holdings = heldRows.map((holding) => ({
+		...holding,
+		totalValue:
+			holding.shares != null && holding.price != null ? holding.shares * holding.price : null
 	}));
 
 	return { holdings };

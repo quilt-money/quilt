@@ -33,7 +33,7 @@
 	let allSelected = $derived(data.holdings.length > 0 && selected.size === data.holdings.length);
 
 	function toggleAll() {
-		selected = allSelected ? new Set() : new Set(data.holdings.map((r) => r.id));
+		selected = allSelected ? new Set() : new Set(data.holdings.map((holding) => holding.id));
 	}
 
 	function toggle(id: string) {
@@ -43,8 +43,8 @@
 		selected = next;
 	}
 
-	function sumValue(rs: HoldingRow[]) {
-		return rs.reduce((sum, r) => sum + (r.totalValue ?? 0), 0);
+	function sumValue(holdings: HoldingRow[]) {
+		return holdings.reduce((sum, holding) => sum + (holding.totalValue ?? 0), 0);
 	}
 
 	const totalPortfolioValue = $derived(sumValue(data.holdings));
@@ -56,7 +56,9 @@
 		return 'Balance in current view';
 	});
 	const balance = $derived(
-		sumValue(selected.size > 0 ? filteredRows.filter((r) => selected.has(r.id)) : filteredRows)
+		sumValue(
+			selected.size > 0 ? filteredRows.filter((holding) => selected.has(holding.id)) : filteredRows
+		)
 	);
 
 	const leadingColumns: DataTableColumn<HoldingRow>[] = [
@@ -91,6 +93,22 @@
 	const hasActiveFilters = $derived(
 		activeFilters.search.length > 0 || activeFilters.columns.length > 0
 	);
+
+	// A string so the effect below only reruns when the filters actually change,
+	// not every time DataTable hands back a fresh activeFilters object.
+	const filterKey = $derived(
+		JSON.stringify([
+			activeFilters.search,
+			activeFilters.columns.map((filter) => [filter.id, filter.values])
+		])
+	);
+
+	// Changing the search or filters clears the selection, so the selected balance never
+	// includes rows that are no longer shown.
+	$effect(() => {
+		void filterKey;
+		selected = new Set();
+	});
 </script>
 
 <div class="p-6">
