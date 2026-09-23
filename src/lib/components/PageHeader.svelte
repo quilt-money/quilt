@@ -13,11 +13,7 @@
 	} = $props();
 </script>
 
-<div
-	class="sticky top-[var(--app-header-h)] z-20 mb-4 bg-background py-4 {toolbar
-		? 'border-b shadow-sm'
-		: ''}"
->
+<div class="sticky top-[var(--app-header-h)] z-20 mb-4 border-b-2 bg-background px-4 py-4">
 	<div class="flex items-start justify-between gap-4">
 		<div>{@render children()}</div>
 		{#if actions}
