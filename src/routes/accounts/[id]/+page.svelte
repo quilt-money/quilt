@@ -6,6 +6,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
+	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
 	import type { DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 	import { formatMoney } from '$lib/format';
@@ -37,6 +38,9 @@
 
 			<Button variant="destructive" onclick={() => (deleteOpen = true)}>Delete</Button>
 		{/snippet}
+		{#snippet toolbar()}
+			<TableSearch placeholder={`Search holdings for ${data.account.name}...`} />
+		{/snippet}
 		<h1 class="text-2xl font-semibold">{data.account.name}</h1>
 		{#if data.tags.length > 0}
 			<div class="mt-1 flex flex-wrap gap-1">
@@ -54,7 +58,6 @@
 	<SecurityDetailTable
 		data={data.holdings}
 		{trailingColumns}
-		searchPlaceholder={`Search holdings for ${data.account.name}...`}
 	/>
 </div>
 

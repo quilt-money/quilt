@@ -9,6 +9,7 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { resolve } from '$app/paths';
 	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
+	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
 	import { renderSnippet } from '@tanstack/svelte-table';
 
 	let { data } = $props();
@@ -46,13 +47,15 @@
 		{#snippet actions()}
 			<Button onclick={() => (open = true)}>Create account</Button>
 		{/snippet}
+		{#snippet toolbar()}
+			<TableSearch placeholder="Search accounts…" />
+		{/snippet}
 		<h1 class="text-2xl font-semibold">Accounts</h1>
 	</PageHeader>
 
 	<DataTable
 		data={data.accounts}
 		{columns}
-		searchPlaceholder="Search accounts…"
 		onRowClick={(row) => goto(resolve(`/accounts/${row.id}`))}
 	/>
 </div>

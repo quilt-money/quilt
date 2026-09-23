@@ -3,16 +3,28 @@
 
 	let {
 		children,
-		actions
+		actions,
+		toolbar
 	}: {
 		children: Snippet;
 		actions?: Snippet;
+		/** Full-width row below the title (e.g. a TableSearch); sticks along with the header. */
+		toolbar?: Snippet;
 	} = $props();
 </script>
 
-<div class="flex items-start justify-between gap-4 mb-6">
-	<div>{@render children()}</div>
-	{#if actions}
-		<div class="shrink-0">{@render actions()}</div>
+<div
+	class="sticky top-[var(--app-header-h)] z-20 mb-4 bg-background py-4 {toolbar
+		? 'border-b shadow-sm'
+		: ''}"
+>
+	<div class="flex items-start justify-between gap-4">
+		<div>{@render children()}</div>
+		{#if actions}
+			<div class="shrink-0">{@render actions()}</div>
+		{/if}
+	</div>
+	{#if toolbar}
+		<div class="mt-4 flex flex-wrap items-center gap-2">{@render toolbar()}</div>
 	{/if}
 </div>

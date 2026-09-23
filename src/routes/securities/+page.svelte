@@ -9,6 +9,7 @@
 	import { renderComponent, renderSnippet } from '@tanstack/svelte-table';
 	import type { DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
+	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
 	import { formatMoney } from '$lib/format';
 	import { portfolioHref } from '$lib/portfolio-filter';
 
@@ -126,6 +127,9 @@
 					{syncing ? 'Syncing…' : selected.size > 0 ? `Sync ${selected.size} securities` : 'Sync'}
 				</Button>
 			{/snippet}
+			{#snippet toolbar()}
+				<TableSearch placeholder="Search securities…" />
+			{/snippet}
 			<h1 class="text-2xl font-semibold">Securities</h1>
 		</PageHeader>
 
@@ -133,10 +137,6 @@
 			data={data.securitiesWithPricesAndSyncTimes}
 			{leadingColumns}
 			{trailingColumns}
-			searchPlaceholder="Search securities…"
-			onSearchKeydown={(e) => {
-				if (e.key === 'Enter') e.preventDefault();
-			}}
 			onRowClick={(row) => goto(resolve(`/securities/${row.id}`))}
 		/>
 	</form>

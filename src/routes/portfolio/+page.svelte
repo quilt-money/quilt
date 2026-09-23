@@ -12,6 +12,7 @@
 	} from '$lib/components/data-table/DataTable.svelte';
 	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
 	import { formatMoney } from '$lib/format';
 
 	let { data } = $props();
@@ -87,6 +88,9 @@
 
 <div class="p-6">
 	<PageHeader>
+		{#snippet toolbar()}
+			<TableSearch />
+		{/snippet}
 		<div class="flex items-center gap-2">
 			{#if fromDashboard}
 				<a
@@ -99,9 +103,6 @@
 			{/if}
 			<h1 class="text-2xl font-semibold">Portfolio</h1>
 		</div>
-	</PageHeader>
-
-	<div class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 px-4 py-3">
 		<span class="text-sm font-medium text-muted-foreground">{balanceLabel}</span>
 		<span class="text-lg font-semibold">{formatMoney(balance)}</span>
 		{#if hasActiveFilters}
@@ -129,13 +130,12 @@
 				{/each}
 			</div>
 		{/if}
-	</div>
+	</PageHeader>
 
 	<SecurityDetailTable
 		data={data.holdings}
 		{leadingColumns}
 		{trailingColumns}
-		searchPlaceholder="Search…"
 		bind:filteredData={filteredRows}
 		bind:activeFilters
 	/>

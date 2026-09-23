@@ -18,9 +18,6 @@
 		data,
 		leadingColumns = [],
 		trailingColumns = [],
-		search = true,
-		searchPlaceholder = 'Search…',
-		onSearchKeydown,
 		onRowClick,
 		filteredData = $bindable([]),
 		activeFilters = $bindable({ search: '', clearSearch: () => {}, columns: [] })
@@ -28,9 +25,6 @@
 		data: TData[];
 		leadingColumns?: DataTableColumn<TData>[];
 		trailingColumns?: DataTableColumn<TData>[];
-		search?: boolean;
-		searchPlaceholder?: string;
-		onSearchKeydown?: (e: KeyboardEvent) => void;
 		onRowClick?: (row: TData) => void;
 		filteredData?: TData[];
 		activeFilters?: DataTableFilterSummary;
@@ -50,9 +44,6 @@
 <DataTable
 	{data}
 	{columns}
-	{search}
-	{searchPlaceholder}
-	{onSearchKeydown}
 	{onRowClick}
 	bind:filteredData
 	bind:activeFilters

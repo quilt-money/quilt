@@ -70,14 +70,10 @@
 	} from '@tanstack/svelte-table';
 	import { onMount, untrack } from 'svelte';
 	import SortableHeader from './SortableHeader.svelte';
-	import TableSearch from './TableSearch.svelte';
 
 	let {
 		data,
 		columns: columnDefs,
-		search = true,
-		searchPlaceholder = 'Search…',
-		onSearchKeydown,
 		onRowClick,
 		// eslint-disable-next-line no-useless-assignment -- read by the parent via bind:filteredData
 		filteredData = $bindable([]),
@@ -86,9 +82,6 @@
 	}: {
 		data: TData[];
 		columns: DataTableColumn<TData>[];
-		search?: boolean;
-		searchPlaceholder?: string;
-		onSearchKeydown?: (e: KeyboardEvent) => void;
 		onRowClick?: (row: TData) => void;
 		/** Bind to receive the rows currently passing search/column filters, kept in sync as the user filters. */
 		filteredData?: TData[];
@@ -248,12 +241,6 @@
 		tableEl.style.tableLayout = 'fixed';
 	});
 </script>
-
-{#if search}
-	<div class="mb-4 flex items-center gap-2">
-		<TableSearch {table} placeholder={searchPlaceholder} onkeydown={onSearchKeydown} />
-	</div>
-{/if}
 
 <Table.Root bind:ref={tableEl}>
 	<Table.Header bind:ref={theadEl}>
