@@ -9,3 +9,4 @@
 - some kind of query explorer, similar to metabase but can be tailored for the dataset in the app. -- IN BRANCH (reports)
 - figure out how to get rid of the accounts table (merge it with a filtered portfolio table instead)?
 - ~~We reuse the super query (basically joining all tables) many times. Figure out how to reuse it (will help with reports too)~~
+- On the portfolio page, if a security is listed in multiple accounts, the row should expand/collapse to show the accounts it is held in.
