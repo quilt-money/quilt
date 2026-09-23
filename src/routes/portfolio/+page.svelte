@@ -47,7 +47,14 @@
 		return rs.reduce((sum, r) => sum + (r.totalValue ?? 0), 0);
 	}
 
-	const balanceLabel = $derived(selected.size > 0 ? 'Selected balance' : 'Total balance');
+	const totalPortfolioValue = $derived(sumValue(data.holdings));
+
+	const balanceLabel = $derived.by(() => {
+		if (selected.size > 0) {
+			return 'Selected balance';
+		}
+		return 'Balance in current view';
+	});
 	const balance = $derived(
 		sumValue(selected.size > 0 ? filteredRows.filter((r) => selected.has(r.id)) : filteredRows)
 	);
@@ -90,8 +97,34 @@
 	<PageHeader>
 		{#snippet toolbar()}
 			<TableSearch />
+			<!-- Chips are shorter than the search input, so they fit this row without growing the header. -->
+			{#if hasActiveFilters}
+				<div class="flex flex-wrap items-center gap-2 border-l pl-3">
+					<span class="text-sm font-medium text-muted-foreground">Filtered by</span>
+					{#if activeFilters.search}
+						<button
+							type="button"
+							class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
+							onclick={activeFilters.clearSearch}
+						>
+							Search: "{activeFilters.search}"
+							<XIcon class="size-4" />
+						</button>
+					{/if}
+					{#each activeFilters.columns as filter (filter.id)}
+						<button
+							type="button"
+							class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
+							onclick={filter.clear}
+						>
+							{filter.label}: {filter.values.join(' and ')}
+							<XIcon class="size-4" />
+						</button>
+					{/each}
+				</div>
+			{/if}
 		{/snippet}
-		<div class="flex items-center gap-2">
+		<div class="flex items-start gap-2">
 			{#if fromDashboard}
 				<a
 					href={resolve('/dashboard')}
@@ -101,35 +134,14 @@
 					<ArrowLeftIcon class="size-5" />
 				</a>
 			{/if}
-			<h1 class="text-2xl font-semibold">Portfolio</h1>
-		</div>
-		<span class="text-sm font-medium text-muted-foreground">{balanceLabel}</span>
-		<span class="text-lg font-semibold">{formatMoney(balance)}</span>
-		{#if hasActiveFilters}
-			<div class="ml-2 flex flex-wrap items-center gap-2 border-l pl-3">
-				<span class="text-sm font-medium text-muted-foreground">Filtered by</span>
-				{#if activeFilters.search}
-					<button
-						type="button"
-						class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
-						onclick={activeFilters.clearSearch}
-					>
-						Search: "{activeFilters.search}"
-						<XIcon class="size-4" />
-					</button>
-				{/if}
-				{#each activeFilters.columns as filter (filter.id)}
-					<button
-						type="button"
-						class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
-						onclick={filter.clear}
-					>
-						{filter.label}: {filter.values.join(' and ')}
-						<XIcon class="size-4" />
-					</button>
-				{/each}
+			<div>
+				<h1 class="text-2xl font-semibold">Portfolio</h1>
+				<p class="text-sm font-medium text-muted-foreground">
+					Total portfolio value: {formatMoney(totalPortfolioValue)}
+				</p>
 			</div>
-		{/if}
+		</div>
+		<span class="text-sm font-medium">{balanceLabel} {formatMoney(balance)}</span>
 	</PageHeader>
 
 	<SecurityDetailTable
