@@ -3,12 +3,12 @@
 	import PiggyBankIcon from '@lucide/svelte/icons/piggy-bank';
 	import WalletIcon from '@lucide/svelte/icons/wallet';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
-	import TerminalIcon from '@lucide/svelte/icons/terminal';
+	import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
 
 	const navItems = [
 		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboardIcon },
 		{ title: 'Portfolio', url: '/portfolio', icon: PiggyBankIcon },
-		{ title: 'Reports', url: '/reports', icon: TerminalIcon }
+		{ title: 'Reports', url: '/reports', icon: ChartPieIcon }
 	] as const;
 
 	const dataNavItems = [
