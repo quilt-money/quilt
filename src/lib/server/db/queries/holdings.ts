@@ -14,7 +14,7 @@ import { latestPriceSnapshot } from './latest-price';
 /**
  * Every holding joined out to its account, security attributes, and latest
  * price. This is the "super query" reused across the accounts, portfolio,
- * and dashboard pages.
+ * and reports pages.
  */
 export function holdingRows() {
 	const { latestSnapshot, latestPriceOn } = latestPriceSnapshot();

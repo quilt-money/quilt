@@ -22,7 +22,6 @@
 			const name = (page.data as { account?: { name: string } }).account?.name ?? 'Account';
 			return [{ label: 'Accounts', href: '/accounts' }, { label: name }];
 		}
-		if (path === '/dashboard') return [{ label: 'Dashboard' }];
 		if (path === '/portfolio') return [{ label: 'Portfolio' }];
 		if (path === '/reports') return [{ label: 'Reports' }];
 		if (path === '/reports/new') {

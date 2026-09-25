@@ -1,12 +1,10 @@
 <script lang="ts" module>
-	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import PiggyBankIcon from '@lucide/svelte/icons/piggy-bank';
 	import WalletIcon from '@lucide/svelte/icons/wallet';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
 	import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
 
 	const navItems = [
-		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboardIcon },
 		{ title: 'Portfolio', url: '/portfolio', icon: PiggyBankIcon },
 		{ title: 'Reports', url: '/reports', icon: ChartPieIcon }
 	] as const;
