@@ -55,13 +55,7 @@
 		cellClass?: string;
 		/** Only meaningful when `accessorKey` is set. Defaults to true. */
 		sortable?: boolean;
-		/**
-		 * Renders a filter icon in the header with a checkbox popover over the column's distinct values.
-		 * `arrHas` is for a scalar column (e.g. sector); `arrIncludesSome` is for an array-valued column
-		 * (e.g. tags), matching a row if it shares at least one selected value.
-		 */
 		filterFn?: 'arrHas' | 'arrIncludesSome';
-		/** For an array-valued column: the distinct values to offer in the filter picker, one per element rather than the whole array. */
 		getUniqueValues?: (row: TData) => readonly string[];
 		enableGlobalFilter?: boolean;
 	};
