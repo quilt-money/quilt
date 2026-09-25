@@ -6,3 +6,5 @@
 - some kind of query explorer, similar to metabase but can be tailored for the dataset in the app. -- IN BRANCH (reports)
 - figure out how to get rid of the accounts table (merge it with a filtered portfolio table instead)?
 - On the portfolio page, if a security is listed in multiple accounts, the row should expand/collapse to show the accounts it is held in.
+- generacize the tags system (tags can be applied to accounts and securities)
+- save filters on the portfolio page

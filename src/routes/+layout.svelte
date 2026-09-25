@@ -24,6 +24,10 @@
 		}
 		if (path === '/dashboard') return [{ label: 'Dashboard' }];
 		if (path === '/portfolio') return [{ label: 'Portfolio' }];
+		if (path === '/reports') return [{ label: 'Reports' }];
+		if (path === '/reports/new') {
+			return [{ label: 'Reports', href: '/reports' }, { label: 'New report' }];
+		}
 		if (path === '/securities') return [{ label: 'Securities' }];
 		if (path.startsWith('/securities/')) {
 			const symbol =

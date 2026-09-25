@@ -42,3 +42,20 @@ export function holdingRows() {
 		.leftJoin(latestSnapshot, eq(security.id, latestSnapshot.securityId))
 		.leftJoin(priceSnapshot, latestPriceOn);
 }
+
+export type HoldingWithValue = Awaited<ReturnType<typeof holdingRows>>[number] & {
+	totalValue: number | null;
+};
+
+/**
+ * Adds each holding's market value (shares × latest price) to rows from {@link holdingRows}.
+ * Computed in JS since drizzle's query builder has no cross-column multiply operator
+ * outside a raw sql tag.
+ */
+export function withTotalValue(rows: Awaited<ReturnType<typeof holdingRows>>): HoldingWithValue[] {
+	return rows.map((holding) => ({
+		...holding,
+		totalValue:
+			holding.shares != null && holding.price != null ? holding.shares * holding.price : null
+	}));
+}
