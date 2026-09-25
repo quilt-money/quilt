@@ -46,3 +46,7 @@ holdings.reduce((sum, holding) => sum + holding.totalValue, 0);
 ```
 
 Name things after what they are in the domain (`holding`, `account`, `security`, `filter`, `event`), not their shape (`r`, `x`, `item`, `obj`). When editing a file, rename any short names in the code you touch.
+
+## Git
+
+Never run any command that affects my git history or staged files (git add, git commit, git remove, git revert, etc.)
