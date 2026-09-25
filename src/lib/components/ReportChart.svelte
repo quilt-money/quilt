@@ -2,7 +2,7 @@
 	import type { EChartsOption, ECElementEvent } from 'echarts';
 	import { goto } from '$app/navigation';
 	import EChart from '$lib/components/EChart.svelte';
-	import type { HoldingWithValue } from '$lib/server/db/queries/holdings';
+	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 	import {
 		computeSlices,
 		filterHoldings,
@@ -21,7 +21,7 @@
 		config
 	}: {
 		title: string;
-		holdings: HoldingWithValue[];
+		holdings: HoldingWithTags[];
 		config: ReportConfig;
 	} = $props();
 

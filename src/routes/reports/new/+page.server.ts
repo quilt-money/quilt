@@ -1,12 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { holdingRows, withTotalValue } from '$lib/server/db/queries/holdings';
+import { holdingRows, withTags, withTotalValue } from '$lib/server/db/queries/holdings';
 import { createReport } from '$lib/server/db/queries/reports';
 import type { ReportConfig } from '$lib/report-builder';
 
 export async function load() {
 	const heldRows = await holdingRows();
 
-	return { holdings: withTotalValue(heldRows) };
+	return { holdings: await withTags(withTotalValue(heldRows)) };
 }
 
 export const actions = {

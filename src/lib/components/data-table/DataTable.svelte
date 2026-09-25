@@ -7,6 +7,7 @@
 		createFilteredRowModel,
 		createSortedRowModel,
 		filterFn_arrHas,
+		filterFn_arrIncludesSome,
 		globalFilteringFeature,
 		rowSortingFeature,
 		sortFn_alphanumeric,
@@ -29,7 +30,7 @@
 		columnFilteringFeature,
 		globalFilteringFeature,
 		filteredRowModel: createFilteredRowModel(),
-		filterFns: { arrHas: filterFn_arrHas },
+		filterFns: { arrHas: filterFn_arrHas, arrIncludesSome: filterFn_arrIncludesSome },
 		columnFacetingFeature,
 		facetedRowModel: createFacetedRowModel(),
 		facetedUniqueValues: createFacetedUniqueValues()
@@ -54,8 +55,14 @@
 		cellClass?: string;
 		/** Only meaningful when `accessorKey` is set. Defaults to true. */
 		sortable?: boolean;
-		/** Renders a filter icon in the header with a checkbox popover over the column's distinct values. */
-		filterFn?: 'arrHas';
+		/**
+		 * Renders a filter icon in the header with a checkbox popover over the column's distinct values.
+		 * `arrHas` is for a scalar column (e.g. sector); `arrIncludesSome` is for an array-valued column
+		 * (e.g. tags), matching a row if it shares at least one selected value.
+		 */
+		filterFn?: 'arrHas' | 'arrIncludesSome';
+		/** For an array-valued column: the distinct values to offer in the filter picker, one per element rather than the whole array. */
+		getUniqueValues?: (row: TData) => readonly string[];
 		enableGlobalFilter?: boolean;
 	};
 </script>
@@ -121,7 +128,8 @@
 					cell: col.cell ?? ((ctx) => ctx.getValue() ?? '—'),
 					enableSorting: col.sortable ?? true,
 					enableGlobalFilter: col.enableGlobalFilter,
-					filterFn: col.filterFn
+					filterFn: col.filterFn,
+					getUniqueValues: col.getUniqueValues
 				});
 			}
 

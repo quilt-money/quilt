@@ -7,6 +7,7 @@ const serializePortfolioParams = createSerializer({
 	sector: parseAsArrayOf(parseAsString),
 	region: parseAsArrayOf(parseAsString),
 	type: parseAsArrayOf(parseAsString),
+	tags: parseAsArrayOf(parseAsString),
 	search: parseAsString
 });
 
@@ -25,6 +26,7 @@ export function portfolioFilterHref(field: FilterField | 'search', value: string
 		sector: field === 'sector' ? [value] : null,
 		region: field === 'region' ? [value] : null,
 		type: field === 'type' ? [value] : null,
+		tags: field === 'tags' ? [value] : null,
 		search: field === 'search' ? value : null
 	});
 	return resolve(`/portfolio?${query.slice(1)}`);

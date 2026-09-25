@@ -10,6 +10,7 @@ import {
 } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { latestPriceSnapshot } from './latest-price';
+import { getTagsForEntities } from './tags';
 
 /**
  * Every holding joined out to its account, security attributes, and latest
@@ -58,4 +59,36 @@ export function withTotalValue(rows: Awaited<ReturnType<typeof holdingRows>>): H
 		totalValue:
 			holding.shares != null && holding.price != null ? holding.shares * holding.price : null
 	}));
+}
+
+export type HoldingWithTags = HoldingWithValue & { tags: string[] };
+
+/**
+ * Adds each holding's combined account + security tags (deduped, sorted) from the
+ * generic entity-tag system. A holding matches a tag if either its account or its
+ * security carries it.
+ */
+export async function withTags(holdings: HoldingWithValue[]): Promise<HoldingWithTags[]> {
+	const accountIds = [
+		...new Set(
+			holdings
+				.map((holding) => holding.accountId)
+				.filter((accountId): accountId is string => accountId != null)
+		)
+	];
+	const securityIds = [...new Set(holdings.map((holding) => holding.securityId))];
+
+	const [accountTagsByAccountId, securityTagsBySecurityId] = await Promise.all([
+		getTagsForEntities('account', accountIds),
+		getTagsForEntities('security', securityIds)
+	]);
+
+	return holdings.map((holding) => {
+		const accountTags = holding.accountId
+			? (accountTagsByAccountId.get(holding.accountId) ?? [])
+			: [];
+		const securityTags = securityTagsBySecurityId.get(holding.securityId) ?? [];
+		const tags = [...new Set([...accountTags, ...securityTags])].sort((a, b) => a.localeCompare(b));
+		return { ...holding, tags };
+	});
 }
