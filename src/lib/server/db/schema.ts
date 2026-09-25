@@ -78,17 +78,19 @@ export const tag = sqliteTable('tag', {
 	name: text('name').notNull().unique()
 });
 
-export const accountTag = sqliteTable(
-	'account_tag',
+export const ENTITY_TYPES = ['account', 'security'] as const;
+export type EntityType = (typeof ENTITY_TYPES)[number];
+
+export const entityTag = sqliteTable(
+	'entity_tag',
 	{
-		accountId: text('account_id')
-			.notNull()
-			.references(() => account.id, { onDelete: 'cascade' }),
+		entityId: text('entity_id').notNull(),
+		entityType: text('entity_type').$type<EntityType>().notNull(),
 		tagId: text('tag_id')
 			.notNull()
 			.references(() => tag.id, { onDelete: 'cascade' })
 	},
-	(t) => [unique().on(t.accountId, t.tagId)]
+	(t) => [unique().on(t.entityId, t.entityType, t.tagId)]
 );
 
 export const report = sqliteTable('report', {

@@ -15,6 +15,13 @@
       "when": 1790305305579,
       "tag": "0001_green_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790306187909,
+      "tag": "0002_tired_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }

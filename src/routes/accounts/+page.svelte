@@ -89,7 +89,7 @@
 					</div>
 					<div class="grid gap-2">
 						<Label>Tags</Label>
-						<TagInput bind:this={tagInput} availableTags={data.tags.map((t) => t.name)} />
+						<TagInput bind:this={tagInput} availableTags={data.tags} />
 					</div>
 				</div>
 

@@ -1,28 +1,22 @@
 import { db } from '$lib/server/db';
-import { account, accountTag, tag } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { account } from '$lib/server/db/schema';
 import { fail } from '@sveltejs/kit';
+import { getTagsForEntities, listAllTagNames, syncEntityTags } from '$lib/server/db/queries/tags';
 
 export async function load() {
-	const [accounts, tags, accountTags] = await Promise.all([
-		db.select().from(account).orderBy(account.name),
-		db.select().from(tag).orderBy(tag.name),
-		db
-			.select({ accountId: accountTag.accountId, tagName: tag.name })
-			.from(accountTag)
-			.innerJoin(tag, eq(accountTag.tagId, tag.id))
+	const accounts = await db.select().from(account).orderBy(account.name);
+
+	const [tagsByAccountId, allTagNames] = await Promise.all([
+		getTagsForEntities(
+			'account',
+			accounts.map((acct) => acct.id)
+		),
+		listAllTagNames()
 	]);
 
-	const tagsByAccountId = new Map<string, string[]>();
-	for (const { accountId, tagName } of accountTags) {
-		const existing = tagsByAccountId.get(accountId);
-		if (existing) existing.push(tagName);
-		else tagsByAccountId.set(accountId, [tagName]);
-	}
-
 	return {
-		accounts: accounts.map((a) => ({ ...a, tags: tagsByAccountId.get(a.id) ?? [] })),
-		tags
+		accounts: accounts.map((acct) => ({ ...acct, tags: tagsByAccountId.get(acct.id) ?? [] })),
+		tags: allTagNames
 	};
 }
 
@@ -41,21 +35,6 @@ export const actions = {
 			.values({ name })
 			.returning({ accountId: account.id });
 
-		if (tagNames.length > 0) {
-			const tagIds: string[] = [];
-			for (const tagName of tagNames) {
-				const existing = await db.select().from(tag).where(eq(tag.name, tagName)).limit(1);
-				if (existing.length > 0) {
-					tagIds.push(existing[0].id);
-				} else {
-					const [{ tagId }] = await db
-						.insert(tag)
-						.values({ name: tagName })
-						.returning({ tagId: tag.id });
-					tagIds.push(tagId);
-				}
-			}
-			await db.insert(accountTag).values(tagIds.map((tagId) => ({ accountId, tagId })));
-		}
+		await syncEntityTags('account', accountId, tagNames);
 	}
 };
