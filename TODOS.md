@@ -3,8 +3,8 @@
 - basic cost tracking with P&L
   - CSV uploads should have a basis column. This will map to the amountSpent column in the price_basis table. Each holding (account + security) has its own basis.
   - No lot tracking
-- some kind of query explorer, similar to metabase but can be tailored for the dataset in the app. -- IN BRANCH (reports)
 - figure out how to get rid of the accounts table (merge it with a filtered portfolio table instead)?
 - On the portfolio page, if a security is listed in multiple accounts, the row should expand/collapse to show the accounts it is held in.
 - save filters on the portfolio page
 - cron job to sync prices
+- delete reports + drag and drop report page builder

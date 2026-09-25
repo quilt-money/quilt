@@ -1,7 +1,7 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-	import { renderComponent } from '@tanstack/svelte-table';
+	import { renderComponent, renderSnippet } from '@tanstack/svelte-table';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type {
 		DataTableColumn,
@@ -78,8 +78,9 @@
 			accessorKey: 'tags',
 			header: 'Tags',
 			filterFn: 'arrIncludesSome',
+			sortable: false,
 			getUniqueValues: (row) => row.tags,
-			cell: (ctx) => (ctx.getValue() as string[]).join(', ') || '—'
+			cell: (ctx) => renderSnippet(tagsCell, ctx.getValue() as string[])
 		}
 	];
 
@@ -112,6 +113,20 @@
 		selected = new Set();
 	});
 </script>
+
+{#snippet tagsCell(tags: string[])}
+	<div class="flex flex-wrap gap-1">
+		{#each tags as tag (tag)}
+			<span
+				class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium"
+			>
+				{tag}
+			</span>
+		{:else}
+			<span class="text-muted-foreground">—</span>
+		{/each}
+	</div>
+{/snippet}
 
 <div class="p-6">
 	<PageHeader>
