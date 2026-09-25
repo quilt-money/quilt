@@ -18,6 +18,7 @@ import {
 	regionBucketFor
 } from '$lib/server/fmp';
 import { securityRows } from '$lib/server/db/queries/securities';
+import { getTagsForEntities } from '$lib/server/db/queries/tags';
 
 export async function load() {
 	const [rows, holdingAccountRows] = await Promise.all([
@@ -42,10 +43,16 @@ export async function load() {
 		accountsBySecurityId.set(r.securityId, accounts);
 	}
 
+	const tagsBySecurityId = await getTagsForEntities(
+		'security',
+		rows.map((r) => r.id)
+	);
+
 	const securitiesWithPricesAndSyncTimes = rows.map(({ price, ...r }) => ({
 		...r,
 		latestPrice: price,
-		accounts: accountsBySecurityId.get(r.id) ?? []
+		accounts: accountsBySecurityId.get(r.id) ?? [],
+		tags: tagsBySecurityId.get(r.id) ?? []
 	}));
 
 	return { securitiesWithPricesAndSyncTimes };

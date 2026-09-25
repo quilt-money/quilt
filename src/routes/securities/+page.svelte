@@ -77,6 +77,13 @@
 				})
 		},
 		{
+			id: 'tags',
+			header: 'Tags',
+			accessorKey: 'tags',
+			enableGlobalFilter: false,
+			cell: (ctx) => renderSnippet(tagsCell, ctx.getValue() as string[])
+		},
+		{
 			accessorKey: 'lastSynced',
 			header: 'Last synced',
 			cell: (ctx) => {
@@ -104,6 +111,18 @@
 			</a>
 		{:else}
 			<span class="text-muted-foreground">—</span>
+		{/each}
+	</div>
+{/snippet}
+
+{#snippet tagsCell(tags: string[])}
+	<div class="flex flex-wrap gap-1">
+		{#each tags as tag (tag)}
+			<span
+				class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium"
+			>
+				{tag}
+			</span>
 		{/each}
 	</div>
 {/snippet}

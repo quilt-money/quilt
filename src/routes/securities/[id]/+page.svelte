@@ -2,7 +2,9 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import TagInput from '$lib/components/TagInput.svelte';
 	import { formatMoney } from '$lib/format';
 	import { enhance } from '$app/forms';
 	import { untrack } from 'svelte';
@@ -72,6 +74,17 @@
 		</div>
 		<p class="text-muted-foreground">{data.security.fullName ?? '—'}</p>
 		<p class="text-muted-foreground">Latest price: {formatMoney(data.latestPrice)}</p>
+		{#if data.tags.length > 0}
+			<div class="mt-1 flex flex-wrap gap-1">
+				{#each data.tags as tag (tag)}
+					<span
+						class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium"
+					>
+						{tag}
+					</span>
+				{/each}
+			</div>
+		{/if}
 	</PageHeader>
 
 	<Table.Root>
@@ -112,7 +125,7 @@
 		<form
 			method="POST"
 			action="?/update"
-			class="flex h-full flex-col"
+			class="flex h-full flex-col overflow-y-auto"
 			use:enhance={() => {
 				return ({ result, update }) => {
 					if (result.type === 'success' || result.type === 'redirect') {
@@ -125,10 +138,12 @@
 		>
 			<Drawer.Header>
 				<Drawer.Title>Edit {data.security.symbol}</Drawer.Title>
-				<Drawer.Description>Update this security's type, sector, and region.</Drawer.Description>
+				<Drawer.Description
+					>Update this security's type, sector, region, and tags.</Drawer.Description
+				>
 			</Drawer.Header>
 
-			<div class="flex flex-col gap-4 overflow-y-auto px-4">
+			<div class="flex flex-col gap-4 px-4">
 				{@render attributeSelect('Type', 'typeId', typeId, (v) => (typeId = v), data.securityTypes)}
 				{@render attributeSelect(
 					'Sector',
@@ -144,6 +159,14 @@
 					(v) => (regionId = v),
 					data.regions
 				)}
+				<div>
+					<Label>Tags</Label>
+					{#key open}
+						<div class="mt-1.5">
+							<TagInput availableTags={data.allTags} initialTags={data.tags} />
+						</div>
+					{/key}
+				</div>
 			</div>
 
 			<Drawer.Footer>
