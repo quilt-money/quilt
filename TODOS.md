@@ -7,3 +7,4 @@
 - figure out how to get rid of the accounts table (merge it with a filtered portfolio table instead)?
 - On the portfolio page, if a security is listed in multiple accounts, the row should expand/collapse to show the accounts it is held in.
 - save filters on the portfolio page
+- cron job to sync prices

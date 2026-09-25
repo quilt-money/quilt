@@ -43,6 +43,15 @@ export const FILTER_LABELS: Record<FilterField, string> = {
 
 export const FILTER_FIELDS = Object.keys(FILTER_LABELS) as FilterField[];
 
+export const DIMENSION_FILTER_FIELD: Record<Dimension, FilterField | 'search' | null> = {
+	none: null,
+	account: 'accountName',
+	sector: 'sector',
+	region: 'region',
+	type: 'type',
+	security: 'search'
+};
+
 export function defaultReportConfig(): ReportConfig {
 	return {
 		metric: 'value',

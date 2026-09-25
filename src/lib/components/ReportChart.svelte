@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { EChartsOption } from 'echarts';
+	import type { EChartsOption, ECElementEvent } from 'echarts';
+	import { goto } from '$app/navigation';
 	import EChart from '$lib/components/EChart.svelte';
 	import type { HoldingWithValue } from '$lib/server/db/queries/holdings';
 	import {
@@ -7,10 +8,12 @@
 		filterHoldings,
 		formatMetricValue,
 		DIMENSION_LABELS,
+		DIMENSION_FILTER_FIELD,
 		METRIC_LABELS,
 		type ReportConfig
 	} from '$lib/report-builder';
 	import { CATEGORICAL, SURFACE, TEXT_MUTED, GRID_LINE, formatUsd } from '$lib/chart-theme';
+	import { portfolioFilterHref } from '$lib/portfolio-filter';
 
 	let {
 		title,
@@ -27,6 +30,22 @@
 	const total = $derived(slices.reduce((sum, slice) => sum + slice.value, 0));
 
 	const seriesName = $derived(METRIC_LABELS[config.metric]);
+
+	const filterField = $derived(DIMENSION_FILTER_FIELD[config.dimension]);
+	function isClickable(slice: { label: string }) {
+		return filterField !== null && slice.label !== 'Unclassified';
+	}
+
+	function navigateToSlice(slice: { label: string }) {
+		if (!isClickable(slice) || filterField === null) return;
+		goto(portfolioFilterHref(filterField, slice.label));
+	}
+
+	function handleChartClick(params: ECElementEvent) {
+		if (typeof params.dataIndex !== 'number') return;
+		const slice = slices[params.dataIndex];
+		if (slice) navigateToSlice(slice);
+	}
 
 	const pieOption = $derived<EChartsOption>({
 		backgroundColor: 'transparent',
@@ -141,7 +160,10 @@
 				</thead>
 				<tbody>
 					{#each slices as slice (slice.label)}
-						<tr class="border-t">
+						<tr
+							class="border-t {isClickable(slice) ? 'cursor-pointer hover:bg-muted/50' : ''}"
+							onclick={() => navigateToSlice(slice)}
+						>
 							<td class="px-3 py-2">{slice.label}</td>
 							<td class="px-3 py-2">{formatMetricValue(config.metric, slice.value)}</td>
 						</tr>
@@ -151,7 +173,7 @@
 		</div>
 	{:else}
 		<div class="mt-6">
-			<EChart {option} height="320px" />
+			<EChart {option} height="320px" onItemClick={handleChartClick} />
 		</div>
 	{/if}
 </div>
