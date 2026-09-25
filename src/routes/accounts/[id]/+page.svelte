@@ -17,12 +17,17 @@
 
 	type HoldingRow = (typeof data.holdings)[number];
 
+	const totalValue = $derived(
+		data.holdings.reduce((sum, holding) => sum + (holding.totalValue ?? 0), 0)
+	);
+
 	const trailingColumns: DataTableColumn<HoldingRow>[] = [
 		{ accessorKey: 'shares', header: 'Shares' },
 		{
 			accessorKey: 'totalValue',
 			header: 'Total value',
-			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
+			cell: (ctx) => formatMoney(ctx.getValue() as number | null),
+			footer: () => formatMoney(totalValue)
 		}
 	];
 

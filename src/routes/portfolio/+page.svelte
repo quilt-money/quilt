@@ -73,7 +73,14 @@
 				}),
 			enableGlobalFilter: false
 		},
-		{ accessorKey: 'accountName', header: 'Account', filterFn: 'arrHas' }
+		{ accessorKey: 'accountName', header: 'Account', filterFn: 'arrHas' },
+		{
+			accessorKey: 'tags',
+			header: 'Tags',
+			filterFn: 'arrIncludesSome',
+			getUniqueValues: (row) => row.tags,
+			cell: (ctx) => (ctx.getValue() as string[]).join(', ') || '—'
+		}
 	];
 
 	const trailingColumns: DataTableColumn<HoldingRow>[] = [

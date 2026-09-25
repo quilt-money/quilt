@@ -55,6 +55,8 @@
 		cellClass?: string;
 		/** Only meaningful when `accessorKey` is set. Defaults to true. */
 		sortable?: boolean;
+		/** Renders a row at the bottom of the table. Omit for a blank footer cell. */
+		footer?: string | ((ctx: HeaderContext<DataTableFeatures, TData, unknown>) => unknown);
 		filterFn?: 'arrHas' | 'arrIncludesSome';
 		getUniqueValues?: (row: TData) => readonly string[];
 		enableGlobalFilter?: boolean;
@@ -119,6 +121,7 @@
 				return helper.accessor((row) => row[accessorKey] as unknown, {
 					id,
 					header,
+					footer: col.footer,
 					cell: col.cell ?? ((ctx) => ctx.getValue() ?? '—'),
 					enableSorting: col.sortable ?? true,
 					enableGlobalFilter: col.enableGlobalFilter,
@@ -130,6 +133,7 @@
 			return helper.display({
 				id,
 				header,
+				footer: col.footer,
 				cell: col.cell,
 				enableGlobalFilter: col.enableGlobalFilter
 			});
@@ -139,6 +143,8 @@
 	const filterableColumnIds = untrack(() =>
 		columnDefs.filter((col) => col.filterFn).map((col) => col.id ?? col.accessorKey!)
 	);
+
+	const hasFooter = $derived(columnDefs.some((col) => col.footer !== undefined));
 
 	const columnFilterParams = useQueryStates(
 		Object.fromEntries(filterableColumnIds.map((id) => [id, parseAsArrayOf(parseAsString)]))
@@ -274,4 +280,17 @@
 			</Table.Row>
 		{/each}
 	</Table.Body>
+	{#if hasFooter}
+		<Table.Footer>
+			{#each table.getFooterGroups() as group (group.id)}
+				<Table.Row>
+					{#each group.headers as footer (footer.id)}
+						<Table.Cell>
+							<FlexRender {footer} />
+						</Table.Cell>
+					{/each}
+				</Table.Row>
+			{/each}
+		</Table.Footer>
+	{/if}
 </Table.Root>
