@@ -91,6 +91,17 @@ export const accountTag = sqliteTable(
 	(t) => [unique().on(t.accountId, t.tagId)]
 );
 
+export const report = sqliteTable('report', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	title: text('title').notNull(),
+	config: text('config', { mode: 'json' }).notNull(),
+	createdAt: text('created_at')
+		.notNull()
+		.$defaultFn(() => new Date().toISOString())
+});
+
 export const priceBasis = sqliteTable(
 	'price_basis',
 	{
