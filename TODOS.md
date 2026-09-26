@@ -9,4 +9,5 @@
 - delete reports + drag and drop report page builder
 - summary card - reports
 - fix broken "tag smoke test" report
+
   finish reports UI, add protfolio saved filters, cron job, cost basis, update sync

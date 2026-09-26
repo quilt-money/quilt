@@ -212,7 +212,13 @@
 			style={widgetStyle(item)}
 		>
 			<div class="relative h-full">
-				<ReportChart title={item.title} {holdings} config={item.config} fill />
+				<ReportChart
+					title={item.title}
+					{holdings}
+					config={item.config}
+					fill
+					reportId={editMode ? undefined : item.reportId}
+				/>
 
 				{#if editMode}
 					<button

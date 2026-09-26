@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { EChartsOption, ECElementEvent } from 'echarts';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import EChart from '$lib/components/EChart.svelte';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 	import {
@@ -19,12 +20,15 @@
 		title,
 		holdings,
 		config,
-		fill = false
+		fill = false,
+		reportId
 	}: {
 		title: string;
 		holdings: HoldingWithTags[];
 		config: ReportConfig;
 		fill?: boolean;
+		/** When set, the report title links to this report's drill-down page. */
+		reportId?: string;
 	} = $props();
 
 	const filteredHoldings = $derived(filterHoldings(holdings, config.filters));
@@ -141,7 +145,14 @@
 <div class="flex flex-col rounded-lg border bg-card p-6 {fill ? 'h-full' : ''}">
 	<div class="flex items-center justify-between">
 		<div>
-			<p class="text-sm text-muted-foreground">{title}</p>
+			{#if reportId}
+				<a
+					href={resolve('/reports/[id]', { id: reportId })}
+					class="text-sm text-muted-foreground underline-offset-2 hover:underline">{title}</a
+				>
+			{:else}
+				<p class="text-sm text-muted-foreground">{title}</p>
+			{/if}
 			<p class="mt-1 text-2xl font-semibold">{formatMetricValue(config.metric, total)}</p>
 		</div>
 		<p class="text-sm text-muted-foreground">
