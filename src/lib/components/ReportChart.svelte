@@ -2,6 +2,7 @@
 	import type { EChartsOption, ECElementEvent } from 'echarts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import ArrowUpRightIcon from '@lucide/svelte/icons/arrow-up-right';
 	import EChart from '$lib/components/EChart.svelte';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 	import {
@@ -148,8 +149,13 @@
 			{#if reportId}
 				<a
 					href={resolve('/reports/[id]', { id: reportId })}
-					class="text-sm text-muted-foreground underline-offset-2 hover:underline">{title}</a
+					class="group/report-link inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
 				>
+					{title}
+					<ArrowUpRightIcon
+						class="size-3.5 transition-transform group-hover/report-link:translate-x-0.5 group-hover/report-link:-translate-y-0.5"
+					/>
+				</a>
 			{:else}
 				<p class="text-sm text-muted-foreground">{title}</p>
 			{/if}

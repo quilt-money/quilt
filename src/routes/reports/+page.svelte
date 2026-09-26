@@ -16,7 +16,7 @@
 	let { data } = $props();
 
 	let editMode = $state(false);
-	let items = $state<DashboardItem[]>(data.dashboardItems);
+	let items = $state<DashboardItem[]>((() => data.dashboardItems)());
 
 	const availableReports = $derived(
 		data.reports.filter((savedReport) => !items.some((item) => item.reportId === savedReport.id))
