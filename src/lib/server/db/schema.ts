@@ -1,4 +1,4 @@
-import { real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { integer, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
 export const sector = sqliteTable('sector', {
 	id: text('id')
@@ -102,6 +102,16 @@ export const report = sqliteTable('report', {
 	createdAt: text('created_at')
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
+});
+
+export const dashboardItem = sqliteTable('dashboard_item', {
+	reportId: text('report_id')
+		.primaryKey()
+		.references(() => report.id, { onDelete: 'cascade' }),
+	column: integer('column').notNull(),
+	row: integer('row').notNull(),
+	columnSpan: integer('column_span').notNull(),
+	rowSpan: integer('row_span').notNull()
 });
 
 export const priceBasis = sqliteTable(

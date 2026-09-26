@@ -30,8 +30,21 @@
 	let dimension = $state<Dimension>(initialConfig.dimension);
 	let chartType = $state<ChartType>(initialConfig.chartType);
 	let filters = $state<ReportFilters>(initialConfig.filters);
+	let titleError = $state<string | null>(null);
 
 	const config = $derived<ReportConfig>({ metric, dimension, chartType, filters });
+
+	$effect(() => {
+		if (titleError && title.trim().length > 0) titleError = null;
+	});
+
+	function validateTitle(): boolean {
+		if (title.trim().length === 0) {
+			titleError = 'Report name is required.';
+			return false;
+		}
+		return true;
+	}
 
 	const selectClass =
 		'h-8 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30';
@@ -39,19 +52,33 @@
 
 <div class="p-6">
 	<PageHeader>
-		<h1 class="text-2xl font-semibold">New report</h1>
+		{#snippet actions()}
+			<Button type="submit" form="report-form">Save report</Button>
+		{/snippet}
+		<h1 class="text-2xl font-semibold">{title || 'New report'}</h1>
 	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
 		<form
+			id="report-form"
 			method="POST"
 			action="?/create"
-			use:enhance
+			use:enhance={({ cancel }) => {
+				if (!validateTitle()) cancel();
+			}}
 			class="flex flex-col gap-5 rounded-lg border bg-card p-5"
 		>
 			<div class="grid gap-2">
 				<Label for="report-title">Title</Label>
-				<Input id="report-title" name="title" bind:value={title} />
+				<Input
+					id="report-title"
+					name="title"
+					bind:value={title}
+					aria-invalid={titleError !== null}
+				/>
+				{#if titleError}
+					<p class="text-sm text-destructive">{titleError}</p>
+				{/if}
 			</div>
 
 			<div class="grid gap-2">
@@ -96,8 +123,6 @@
 			</div>
 
 			<input type="hidden" name="config" value={JSON.stringify(config)} />
-
-			<Button type="submit" class="mt-2">Save report</Button>
 		</form>
 
 		<ReportChart {title} holdings={data.holdings} {config} />

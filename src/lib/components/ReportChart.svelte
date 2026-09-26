@@ -18,11 +18,13 @@
 	let {
 		title,
 		holdings,
-		config
+		config,
+		fill = false
 	}: {
 		title: string;
 		holdings: HoldingWithTags[];
 		config: ReportConfig;
+		fill?: boolean;
 	} = $props();
 
 	const filteredHoldings = $derived(filterHoldings(holdings, config.filters));
@@ -136,7 +138,7 @@
 	const option = $derived(config.chartType === 'pie' ? pieOption : barOption);
 </script>
 
-<div class="rounded-lg border bg-card p-6">
+<div class="flex flex-col rounded-lg border bg-card p-6 {fill ? 'h-full' : ''}">
 	<div class="flex items-center justify-between">
 		<div>
 			<p class="text-sm text-muted-foreground">{title}</p>
@@ -150,7 +152,7 @@
 	{#if slices.length === 0}
 		<p class="py-8 text-center text-sm text-muted-foreground">No holdings match these filters.</p>
 	{:else if config.chartType === 'table'}
-		<div class="mt-6 overflow-hidden rounded-md border">
+		<div class="mt-6 overflow-auto rounded-md border {fill ? 'min-h-0 flex-1' : ''}">
 			<table class="w-full text-sm">
 				<thead class="bg-muted/50 text-left text-muted-foreground">
 					<tr>
@@ -172,8 +174,8 @@
 			</table>
 		</div>
 	{:else}
-		<div class="mt-6">
-			<EChart {option} height="320px" onItemClick={handleChartClick} />
+		<div class="mt-6 {fill ? 'min-h-0 flex-1' : ''}">
+			<EChart {option} height={fill ? '100%' : '320px'} onItemClick={handleChartClick} />
 		</div>
 	{/if}
 </div>
