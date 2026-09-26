@@ -89,7 +89,7 @@
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				{/if}
-				<Button variant="outline" onclick={() => (editMode = !editMode)}>
+				<Button variant={editMode ? 'default' : 'outline'} onclick={() => (editMode = !editMode)}>
 					{#if editMode}
 						<CheckIcon class="size-4" />
 						Done
