@@ -51,12 +51,25 @@
 
 	const containerHeightPx = $derived(rowsToPixels(displayRowCount));
 
-	const gridOverlayStyle = $derived(
-		`background-image: repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent ${columnWidthPx + GAP_PX}px), repeating-linear-gradient(to bottom, var(--border) 0, var(--border) 1px, transparent 1px, transparent ${ROW_HEIGHT_PX + GAP_PX}px);`
-	);
+	const overlayColumns = $derived(Array.from({ length: GRID_COLUMNS }, (_, index) => index));
+	const overlayRows = $derived(Array.from({ length: displayRowCount }, (_, index) => index));
 
 	function rowsToPixels(rows: number): number {
 		return rows * ROW_HEIGHT_PX + Math.max(0, rows - 1) * GAP_PX;
+	}
+
+	// Matches DashboardWidget's columnOffsetPx/rowOffsetPx exactly: an item's own left/top
+	// is how many full cell+gap steps precede it, distinct from a span's total pixel size.
+	function columnOffsetPx(column: number): number {
+		return column * (columnWidthPx + GAP_PX);
+	}
+
+	function rowOffsetPx(row: number): number {
+		return row * (ROW_HEIGHT_PX + GAP_PX);
+	}
+
+	function overlayCellStyle(columnIndex: number, rowIndex: number): string {
+		return `left: ${columnOffsetPx(columnIndex)}px; top: ${rowOffsetPx(rowIndex)}px; width: ${columnWidthPx}px; height: ${ROW_HEIGHT_PX}px;`;
 	}
 
 	function clamp(value: number, min: number, max: number): number {
@@ -94,7 +107,16 @@
 <DragDropProvider {plugins} onDragEnd={handleDragEnd}>
 	<div class="relative" style:height="{containerHeightPx}px" bind:clientWidth={containerWidthPx}>
 		{#if editMode}
-			<div class="pointer-events-none absolute inset-0" style={gridOverlayStyle}></div>
+			<div class="pointer-events-none absolute inset-0">
+				{#each overlayColumns as columnIndex (columnIndex)}
+					{#each overlayRows as rowIndex (rowIndex)}
+						<div
+							class="absolute rounded-sm border-2 border-foreground/30 bg-muted-foreground/15"
+							style={overlayCellStyle(columnIndex, rowIndex)}
+						></div>
+					{/each}
+				{/each}
+			</div>
 		{/if}
 		{#each items as item (item.reportId)}
 			<DashboardWidget

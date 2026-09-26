@@ -6,11 +6,6 @@
 - On the portfolio page, if a security is listed in multiple accounts, the row should expand/collapse to show the accounts it is held in.
 - save filters on the portfolio page
 - cron job to sync prices
-- delete reports + drag and drop report page builder
 - summary card - reports
-- fix broken "tag smoke test" report
-
-  finish reports UI, add protfolio saved filters, cron job, cost basis, update sync
-
-- report drilldown breadcrumb
+  add protfolio saved filters, cron job, cost basis, update sync
 - Create report -> popover -> chart / summary selection
