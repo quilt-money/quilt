@@ -41,13 +41,27 @@
 		return columns * columnWidthPx + Math.max(0, columns - 1) * gapPx;
 	}
 
+	// Distinct from the span-size formulas above: an item's own left/top is how many
+	// full cell+gap steps precede it, not the "size of a span" starting from zero.
+	function columnOffsetPx(column: number): number {
+		return column * (columnWidthPx + gapPx);
+	}
+
+	function rowOffsetPx(row: number): number {
+		return row * (rowHeightPx + gapPx);
+	}
+
 	function clamp(value: number, min: number, max: number): number {
 		return Math.min(Math.max(value, min), Math.max(min, max));
 	}
 
 	const { ref, handleRef, isDragging } = useDraggable({
 		id: () => item.reportId,
-		disabled: () => !editMode
+		disabled: () => !editMode,
+		// 'move' transforms this element directly instead of promoting a cloned popover
+		// layer, which matches our absolutely-positioned grid and avoids a reparenting
+		// swap-back once the drag ends.
+		feedback: 'move'
 	});
 
 	// dnd-kit doesn't have a resize primitive, so widget resizing stays hand-rolled pointer logic.
@@ -125,8 +139,8 @@
 	}
 
 	const widgetStyle = $derived.by(() => {
-		const leftPx = columnsToPixels(item.column);
-		const topPx = rowsToPixels(item.row);
+		const leftPx = columnOffsetPx(item.column);
+		const topPx = rowOffsetPx(item.row);
 		const widthPx = resizeState ? resizeState.previewWidthPx : columnsToPixels(item.columnSpan);
 		const heightPx = resizeState ? resizeState.previewHeightPx : rowsToPixels(item.rowSpan);
 		return `left: ${leftPx}px; top: ${topPx}px; width: ${widthPx}px; height: ${heightPx}px;`;

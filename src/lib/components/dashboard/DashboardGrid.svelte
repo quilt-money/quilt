@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { DragDropProvider } from '@dnd-kit-svelte/svelte';
+	import { Feedback, defaultPreset } from '@dnd-kit/dom';
 	import DashboardWidget from '$lib/components/dashboard/DashboardWidget.svelte';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 	import type { DashboardItem, DashboardItemLayout } from '$lib/server/db/queries/dashboard';
@@ -9,6 +10,16 @@
 	const GAP_PX = 16;
 	const MIN_COLUMN_SPAN = 3;
 	const MIN_ROW_SPAN = 6;
+	/** Extra empty rows shown below existing content while editing, so there's visible room to drop into. */
+	const EDIT_BUFFER_ROWS = 6;
+
+	// The grid's own left/top update at drop time already places the widget in its final
+	// spot, so dnd-kit's own spring-back-to-origin drop animation would otherwise fight it
+	// and make the widget jank across the screen before settling. Disabling it lets our
+	// state update be the only thing that moves the widget once it's dropped.
+	const plugins = defaultPreset.plugins.map((plugin) =>
+		plugin === Feedback ? Feedback.configure({ dropAnimation: null }) : plugin
+	);
 
 	let {
 		items,
@@ -30,11 +41,18 @@
 		containerWidthPx > 0 ? (containerWidthPx - GAP_PX * (GRID_COLUMNS - 1)) / GRID_COLUMNS : 0
 	);
 
-	const containerHeightPx = $derived(
-		items.reduce(
-			(maxBottomPx, item) => Math.max(maxBottomPx, rowsToPixels(item.row + item.rowSpan)),
-			0
-		)
+	const contentBottomRow = $derived(
+		items.reduce((maxBottomRow, item) => Math.max(maxBottomRow, item.row + item.rowSpan), 0)
+	);
+
+	const displayRowCount = $derived(
+		editMode ? contentBottomRow + EDIT_BUFFER_ROWS : contentBottomRow
+	);
+
+	const containerHeightPx = $derived(rowsToPixels(displayRowCount));
+
+	const gridOverlayStyle = $derived(
+		`background-image: repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent ${columnWidthPx + GAP_PX}px), repeating-linear-gradient(to bottom, var(--border) 0, var(--border) 1px, transparent 1px, transparent ${ROW_HEIGHT_PX + GAP_PX}px);`
 	);
 
 	function rowsToPixels(rows: number): number {
@@ -73,8 +91,11 @@
 	}
 </script>
 
-<DragDropProvider onDragEnd={handleDragEnd}>
+<DragDropProvider {plugins} onDragEnd={handleDragEnd}>
 	<div class="relative" style:height="{containerHeightPx}px" bind:clientWidth={containerWidthPx}>
+		{#if editMode}
+			<div class="pointer-events-none absolute inset-0" style={gridOverlayStyle}></div>
+		{/if}
 		{#each items as item (item.reportId)}
 			<DashboardWidget
 				{item}

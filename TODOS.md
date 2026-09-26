@@ -11,3 +11,6 @@
 - fix broken "tag smoke test" report
 
   finish reports UI, add protfolio saved filters, cron job, cost basis, update sync
+
+- report drilldown breadcrumb
+- Create report -> popover -> chart / summary selection
