@@ -18,10 +18,10 @@ import {
 	regionBucketFor
 } from '$lib/server/fmp';
 import { securityRows } from '$lib/server/db/queries/securities';
-import { getTagsForEntities } from '$lib/server/db/queries/tags';
+import { getTagsForEntities, listAllTagNames, syncEntityTags } from '$lib/server/db/queries/tags';
 
 export async function load() {
-	const [rows, holdingAccountRows] = await Promise.all([
+	const [rows, holdingAccountRows, securityTypes, sectors, regions, allTags] = await Promise.all([
 		securityRows().orderBy(asc(security.symbol)),
 		db
 			.select({
@@ -31,7 +31,11 @@ export async function load() {
 			})
 			.from(holding)
 			.innerJoin(account, eq(holding.accountId, account.id))
-			.orderBy(account.name)
+			.orderBy(account.name),
+		db.select().from(securityType).orderBy(securityType.name),
+		db.select().from(sector).orderBy(sector.name),
+		db.select().from(region).orderBy(region.name),
+		listAllTagNames()
 	]);
 
 	const accountsBySecurityId = new Map<string, { id: string; name: string }[]>();
@@ -55,10 +59,43 @@ export async function load() {
 		tags: tagsBySecurityId.get(r.id) ?? []
 	}));
 
-	return { securitiesWithPricesAndSyncTimes };
+	return { securitiesWithPricesAndSyncTimes, securityTypes, sectors, regions, allTags };
 }
 
 export const actions = {
+	bulkEdit: async ({ request }) => {
+		const data = await request.formData();
+		const ids = data.getAll('ids').map((id) => id.toString());
+		if (ids.length === 0) return fail(400, { error: 'Select at least one security' });
+
+		const typeId = data.get('typeId')?.toString();
+		const sectorId = data.get('sectorId')?.toString();
+		const regionId = data.get('regionId')?.toString();
+		const addTagsRaw = data.get('addTags')?.toString();
+		const tagsToAdd: string[] = addTagsRaw ? JSON.parse(addTagsRaw) : [];
+
+		// Only fields the user actually touched are applied, so bulk editing a
+		// handful of securities can't silently null out attributes on the rest.
+		const patch: Partial<{ typeId: string; sectorId: string; regionId: string }> = {};
+		if (typeId) patch.typeId = typeId;
+		if (sectorId) patch.sectorId = sectorId;
+		if (regionId) patch.regionId = regionId;
+
+		if (Object.keys(patch).length > 0) {
+			await db.update(security).set(patch).where(inArray(security.id, ids));
+		}
+
+		if (tagsToAdd.length > 0) {
+			const existingTagsBySecurityId = await getTagsForEntities('security', ids);
+			for (const id of ids) {
+				const mergedTags = [
+					...new Set([...(existingTagsBySecurityId.get(id) ?? []), ...tagsToAdd])
+				];
+				await syncEntityTags('security', id, mergedTags);
+			}
+		}
+	},
+
 	sync: async ({ request, fetch }) => {
 		if (!env.FMP_API_KEY) return fail(500, { error: 'FMP_API_KEY is not set' });
 
