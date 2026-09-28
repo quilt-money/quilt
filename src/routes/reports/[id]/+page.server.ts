@@ -21,6 +21,8 @@ export const actions = {
 
 		const config = JSON.parse(configRaw) as ReportConfig;
 		await updateReport(params.id, title, config);
+
+		redirect(303, '/reports');
 	},
 
 	delete: async ({ params }) => {

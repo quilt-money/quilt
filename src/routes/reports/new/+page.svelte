@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import ReportChart from '$lib/components/ReportChart.svelte';
+	import ReportFilterSummary from '$lib/components/reports/ReportFilterSummary.svelte';
 	import ReportFormFields from '$lib/components/reports/ReportFormFields.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
@@ -15,7 +16,7 @@
 
 	let { data } = $props();
 
-	const initialConfig = defaultReportConfig();
+	const initialConfig = defaultReportConfig(data.holdings);
 
 	let title = $state('Untitled report');
 	let metric = $state<Metric>(initialConfig.metric);
@@ -46,6 +47,10 @@
 		{/snippet}
 		<h1 class="text-2xl font-semibold">{title || 'New report'}</h1>
 	</PageHeader>
+
+	<div class="mb-6">
+		<ReportFilterSummary holdings={data.holdings} {filters} />
+	</div>
 
 	<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
 		<form

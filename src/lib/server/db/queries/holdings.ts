@@ -61,13 +61,12 @@ export function withTotalValue(rows: Awaited<ReturnType<typeof holdingRows>>): H
 	}));
 }
 
-export type HoldingWithTags = HoldingWithValue & { tags: string[] };
+export type HoldingWithTags = HoldingWithValue & {
+	tags: string[];
+	accountTags: string[];
+	securityTags: string[];
+};
 
-/**
- * Adds each holding's combined account + security tags (deduped, sorted) from the
- * generic entity-tag system. A holding matches a tag if either its account or its
- * security carries it.
- */
 export async function withTags(holdings: HoldingWithValue[]): Promise<HoldingWithTags[]> {
 	const accountIds = [
 		...new Set(
@@ -84,11 +83,13 @@ export async function withTags(holdings: HoldingWithValue[]): Promise<HoldingWit
 	]);
 
 	return holdings.map((holding) => {
-		const accountTags = holding.accountId
-			? (accountTagsByAccountId.get(holding.accountId) ?? [])
-			: [];
-		const securityTags = securityTagsBySecurityId.get(holding.securityId) ?? [];
+		const accountTags = [
+			...(holding.accountId ? (accountTagsByAccountId.get(holding.accountId) ?? []) : [])
+		].sort((a, b) => a.localeCompare(b));
+		const securityTags = [...(securityTagsBySecurityId.get(holding.securityId) ?? [])].sort(
+			(a, b) => a.localeCompare(b)
+		);
 		const tags = [...new Set([...accountTags, ...securityTags])].sort((a, b) => a.localeCompare(b));
-		return { ...holding, tags };
+		return { ...holding, tags, accountTags, securityTags };
 	});
 }

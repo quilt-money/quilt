@@ -80,7 +80,7 @@
 			<MultiSelectFilter
 				label={FILTER_LABELS[field]}
 				options={filterOptions(holdings, field)}
-				selected={filters[field]}
+				selected={filters[field] ?? []}
 				onChange={(values) => (filters = { ...filters, [field]: values })}
 			/>
 		{/each}

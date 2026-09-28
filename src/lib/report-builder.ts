@@ -4,8 +4,17 @@ import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 export type Metric = 'value' | 'count';
 export type Dimension = 'none' | 'account' | 'sector' | 'region' | 'type' | 'security' | 'tags';
 export type ChartType = 'pie' | 'bar' | 'table';
-export type FilterField = 'accountName' | 'sector' | 'region' | 'type' | 'tags';
+export type FilterField =
+	| 'accountName'
+	| 'sector'
+	| 'region'
+	| 'type'
+	| 'accountTags'
+	| 'securityTags';
 export type ReportFilters = Record<FilterField, string[]>;
+
+/** The columns the portfolio table can be filtered on when drilling down from a report. */
+export type PortfolioFilterField = 'accountName' | 'sector' | 'region' | 'type' | 'tags';
 
 export type ReportConfig = {
 	metric: Metric;
@@ -40,12 +49,13 @@ export const FILTER_LABELS: Record<FilterField, string> = {
 	sector: 'Sector',
 	region: 'Region',
 	type: 'Type',
-	tags: 'Tag'
+	accountTags: 'Account tag',
+	securityTags: 'Security tag'
 };
 
 export const FILTER_FIELDS = Object.keys(FILTER_LABELS) as FilterField[];
 
-export const DIMENSION_FILTER_FIELD: Record<Dimension, FilterField | 'search' | null> = {
+export const DIMENSION_FILTER_FIELD: Record<Dimension, PortfolioFilterField | 'search' | null> = {
 	none: null,
 	account: 'accountName',
 	sector: 'sector',
@@ -55,12 +65,19 @@ export const DIMENSION_FILTER_FIELD: Record<Dimension, FilterField | 'search' | 
 	tags: 'tags'
 };
 
-export function defaultReportConfig(): ReportConfig {
+export function defaultReportConfig(holdings: HoldingWithTags[]): ReportConfig {
 	return {
 		metric: 'value',
 		dimension: 'sector',
 		chartType: 'pie',
-		filters: { accountName: [], sector: [], region: [], type: [], tags: [] }
+		filters: {
+			accountName: filterOptions(holdings, 'accountName'),
+			sector: filterOptions(holdings, 'sector'),
+			region: filterOptions(holdings, 'region'),
+			type: filterOptions(holdings, 'type'),
+			accountTags: filterOptions(holdings, 'accountTags'),
+			securityTags: filterOptions(holdings, 'securityTags')
+		}
 	};
 }
 
@@ -90,12 +107,16 @@ export function filterHoldings(
 	return holdings.filter((holding) =>
 		FILTER_FIELDS.every((field) => {
 			const selectedValues = filters[field] ?? [];
-			if (selectedValues.length === 0) return true;
 			const holdingValue = holding[field];
 			if (Array.isArray(holdingValue)) {
+				// Untagged holdings have no tag to check against the selection, so a
+				// tag filter can't be the thing that excludes them.
+				if (holdingValue.length === 0) return true;
 				return holdingValue.some((value) => selectedValues.includes(value));
 			}
-			return selectedValues.includes(holdingValue ?? '');
+			// Same reasoning for a holding missing this attribute (e.g. no sector).
+			if (holdingValue == null) return true;
+			return selectedValues.includes(holdingValue);
 		})
 	);
 }

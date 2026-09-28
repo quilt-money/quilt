@@ -1,6 +1,6 @@
 import { resolve } from '$app/paths';
 import { createSerializer, parseAsArrayOf, parseAsString } from 'nuqs-svelte';
-import type { FilterField } from '$lib/report-builder';
+import type { PortfolioFilterField } from '$lib/report-builder';
 
 const serializePortfolioParams = createSerializer({
 	accountName: parseAsArrayOf(parseAsString),
@@ -20,7 +20,7 @@ export function portfolioHref(accountName: string, securitySymbol: string) {
 	return resolve(`/portfolio?${query.slice(1)}`);
 }
 
-export function portfolioFilterHref(field: FilterField | 'search', value: string) {
+export function portfolioFilterHref(field: PortfolioFilterField | 'search', value: string) {
 	const query = serializePortfolioParams({
 		accountName: field === 'accountName' ? [value] : null,
 		sector: field === 'sector' ? [value] : null,
