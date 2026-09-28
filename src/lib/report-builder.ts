@@ -4,13 +4,7 @@ import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 export type Metric = 'value' | 'count';
 export type Dimension = 'none' | 'account' | 'sector' | 'region' | 'type' | 'security' | 'tags';
 export type ChartType = 'pie' | 'bar' | 'table';
-export type FilterField =
-	| 'accountName'
-	| 'sector'
-	| 'region'
-	| 'type'
-	| 'accountTags'
-	| 'securityTags';
+export type FilterField = 'accountName' | 'sector' | 'region' | 'type' | 'securityTags';
 export type ReportFilters = Record<FilterField, string[]>;
 
 /** The columns the portfolio table can be filtered on when drilling down from a report. */
@@ -35,7 +29,7 @@ export const DIMENSION_LABELS: Record<Dimension, string> = {
 	region: 'Region',
 	type: 'Type',
 	security: 'Security',
-	tags: 'Tag'
+	tags: 'Security tag'
 };
 
 export const CHART_TYPE_LABELS: Record<ChartType, string> = {
@@ -49,7 +43,6 @@ export const FILTER_LABELS: Record<FilterField, string> = {
 	sector: 'Sector',
 	region: 'Region',
 	type: 'Type',
-	accountTags: 'Account tag',
 	securityTags: 'Security tag'
 };
 
@@ -75,7 +68,6 @@ export function defaultReportConfig(holdings: HoldingWithTags[]): ReportConfig {
 			sector: filterOptions(holdings, 'sector'),
 			region: filterOptions(holdings, 'region'),
 			type: filterOptions(holdings, 'type'),
-			accountTags: filterOptions(holdings, 'accountTags'),
 			securityTags: filterOptions(holdings, 'securityTags')
 		}
 	};
@@ -96,7 +88,7 @@ export function groupLabel(holding: HoldingWithTags, dimension: Dimension): stri
 		case 'security':
 			return holding.symbol;
 		case 'tags':
-			return holding.tags[0] ?? 'Unclassified';
+			return holding.securityTags[0] ?? 'Unclassified';
 	}
 }
 
@@ -131,11 +123,12 @@ export function computeSlices(holdings: HoldingWithTags[], config: ReportConfig)
 		if (config.metric === 'value' && holding.totalValue == null) continue;
 		const amount = config.metric === 'value' ? (holding.totalValue ?? 0) : 1;
 		// A holding can carry multiple tags, so grouping by tag credits its value to
-		// every tag it has rather than forcing it into a single bucket.
+		// every tag it has rather than forcing it into a single bucket. Only security
+		// tags are used here, not account tags.
 		const labels =
 			config.dimension === 'tags'
-				? holding.tags.length > 0
-					? holding.tags
+				? holding.securityTags.length > 0
+					? holding.securityTags
 					: ['Unclassified']
 				: [groupLabel(holding, config.dimension)];
 		for (const label of labels) {
