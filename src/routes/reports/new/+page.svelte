@@ -48,33 +48,41 @@
 		<h1 class="text-2xl font-semibold">{title || 'New report'}</h1>
 	</PageHeader>
 
-	<div class="mb-6">
-		<ReportFilterSummary holdings={data.holdings} {filters} />
-	</div>
+	{#if data.reportType === 'summary'}
+		<div class="max-w-2xl rounded-lg border bg-card p-6">
+			<p class="py-8 text-center text-sm text-muted-foreground">
+				Summary reports are not available yet.
+			</p>
+		</div>
+	{:else}
+		<div class="mb-6">
+			<ReportFilterSummary holdings={data.holdings} {filters} />
+		</div>
 
-	<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
-		<form
-			id="report-form"
-			method="POST"
-			action="?/create"
-			use:enhance={({ cancel }) => {
-				if (!validateTitle()) cancel();
-			}}
-			class="flex flex-col gap-5 rounded-lg border bg-card p-5"
-		>
-			<ReportFormFields
-				holdings={data.holdings}
-				bind:title
-				bind:metric
-				bind:dimension
-				bind:chartType
-				bind:filters
-				{titleError}
-			/>
+		<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
+			<form
+				id="report-form"
+				method="POST"
+				action="?/create"
+				use:enhance={({ cancel }) => {
+					if (!validateTitle()) cancel();
+				}}
+				class="flex flex-col gap-5 rounded-lg border bg-card p-5"
+			>
+				<ReportFormFields
+					holdings={data.holdings}
+					bind:title
+					bind:metric
+					bind:dimension
+					bind:chartType
+					bind:filters
+					{titleError}
+				/>
 
-			<input type="hidden" name="config" value={JSON.stringify(config)} />
-		</form>
+				<input type="hidden" name="config" value={JSON.stringify(config)} />
+			</form>
 
-		<ReportChart {title} holdings={data.holdings} {config} />
-	</div>
+			<ReportChart {title} holdings={data.holdings} {config} />
+		</div>
+	{/if}
 </div>

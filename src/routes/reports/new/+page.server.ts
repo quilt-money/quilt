@@ -3,10 +3,14 @@ import { holdingRows, withTags, withTotalValue } from '$lib/server/db/queries/ho
 import { createReport } from '$lib/server/db/queries/reports';
 import type { ReportConfig } from '$lib/report-builder';
 
-export async function load() {
-	const heldRows = await holdingRows();
+const REPORT_TYPES = ['chart', 'summary'] as const;
 
-	return { holdings: await withTags(withTotalValue(heldRows)) };
+export async function load({ url }) {
+	const heldRows = await holdingRows();
+	const requestedType = url.searchParams.get('reportType');
+	const reportType = REPORT_TYPES.find((type) => type === requestedType) ?? 'chart';
+
+	return { reportType, holdings: await withTags(withTotalValue(heldRows)) };
 }
 
 export const actions = {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import DashboardGrid from '$lib/components/dashboard/DashboardGrid.svelte';
@@ -33,6 +34,10 @@
 			columnSpan: Math.min(DEFAULT_COLUMN_SPAN, GRID_COLUMNS),
 			rowSpan: DEFAULT_ROW_SPAN
 		};
+	}
+
+	function createReport(reportType: 'chart' | 'summary') {
+		goto(resolve(`/reports/new?reportType=${reportType}`));
 	}
 
 	async function addReport(savedReport: (typeof data.reports)[number]) {
@@ -99,7 +104,15 @@
 					{/if}
 				</Button>
 				{#if !editMode}
-					<Button href={resolve('/reports/new')}>Create report</Button>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger class={buttonVariants()}>Create report</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end">
+							<DropdownMenu.Item onSelect={() => createReport('chart')}>Chart</DropdownMenu.Item>
+							<DropdownMenu.Item onSelect={() => createReport('summary')}>
+								Summary
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				{/if}
 			</div>
 		{/snippet}
