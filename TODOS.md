@@ -7,4 +7,3 @@
 - save filters on the portfolio page
 - cron job to sync prices
 - summary card - reports
-- Create report -> popover -> chart / summary selection
