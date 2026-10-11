@@ -37,4 +37,4 @@
 	});
 </script>
 
-<div bind:this={container} class={className} style:height></div>
+<div bind:this={container} class="w-full {className}" style:height></div>

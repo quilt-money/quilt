@@ -15,7 +15,7 @@
 
 <div class="sticky top-[var(--app-header-h)] z-20 mb-4 border-b-2 bg-background px-4 py-4">
 	<div class="flex items-start justify-between gap-4">
-		<div>{@render children()}</div>
+		<div class="min-w-0">{@render children()}</div>
 		{#if actions}
 			<div class="shrink-0">{@render actions()}</div>
 		{/if}

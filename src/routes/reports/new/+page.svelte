@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import ReportChart from '$lib/components/ReportChart.svelte';
-	import ReportFilterSummary from '$lib/components/reports/ReportFilterSummary.svelte';
+	import ReportToolbar from '$lib/components/reports/ReportToolbar.svelte';
 	import ReportFormFields from '$lib/components/reports/ReportFormFields.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
@@ -40,24 +40,22 @@
 	}
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
 	<PageHeader>
 		{#snippet actions()}
 			<Button type="submit" form="report-form">Save report</Button>
 		{/snippet}
-		<h1 class="text-2xl font-semibold">{title || 'New report'}</h1>
+		<h1 class="truncate text-xl font-semibold sm:text-2xl">{title || 'New report'}</h1>
 	</PageHeader>
 
 	{#if data.reportType === 'summary'}
-		<div class="max-w-2xl rounded-lg border bg-card p-6">
+		<div class="max-w-2xl rounded-lg border bg-card p-4 sm:p-6">
 			<p class="py-8 text-center text-sm text-muted-foreground">
 				Summary reports are not available yet.
 			</p>
 		</div>
 	{:else}
-		<div class="mb-6">
-			<ReportFilterSummary holdings={data.holdings} {filters} />
-		</div>
+		<ReportToolbar holdings={data.holdings} bind:chartType bind:filters />
 
 		<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
 			<form
@@ -67,14 +65,13 @@
 				use:enhance={({ cancel }) => {
 					if (!validateTitle()) cancel();
 				}}
-				class="flex flex-col gap-5 rounded-lg border bg-card p-5"
+				class="flex flex-col gap-5 rounded-lg border bg-card p-4 sm:p-5"
 			>
 				<ReportFormFields
 					holdings={data.holdings}
 					bind:title
 					bind:metric
 					bind:dimension
-					bind:chartType
 					bind:filters
 					{titleError}
 				/>
@@ -82,7 +79,9 @@
 				<input type="hidden" name="config" value={JSON.stringify(config)} />
 			</form>
 
-			<ReportChart {title} holdings={data.holdings} {config} />
+			<div class="min-w-0">
+				<ReportChart {title} holdings={data.holdings} {config} />
+			</div>
 		</div>
 	{/if}
 </div>

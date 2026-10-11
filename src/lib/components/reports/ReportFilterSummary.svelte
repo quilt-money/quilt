@@ -32,10 +32,11 @@
 	);
 </script>
 
-<div class="rounded-lg border bg-card p-5">
-	<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+<div class="flex min-w-0 flex-1 xl:min-w-80 flex-col gap-2 p-4">
+	<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Included</p>
+	<div class="grid grid-cols-1 items-baseline gap-x-6 gap-y-2 sm:grid-cols-[1fr_auto_1fr]">
 		<div>
-			<p class="text-sm text-muted-foreground">Holdings included</p>
+			<p class="text-sm text-muted-foreground">Holdings</p>
 			<p class="text-2xl font-semibold">
 				{includedHoldings.length.toLocaleString()}
 				<span class="text-base font-normal text-muted-foreground"
@@ -43,8 +44,8 @@
 				>
 			</p>
 		</div>
-		<div class="text-right">
-			<p class="text-sm text-muted-foreground">Value included</p>
+		<div class="sm:text-center">
+			<p class="text-sm text-muted-foreground">Value</p>
 			<p class="text-2xl font-semibold">
 				{formatMetricValue('value', includedValue)}
 				<span class="text-base font-normal text-muted-foreground"
@@ -54,7 +55,7 @@
 		</div>
 	</div>
 
-	<div class="mt-4 h-2 overflow-hidden rounded-full bg-primary/15">
+	<div class="h-2 overflow-hidden rounded-full bg-primary/15">
 		<div
 			class="h-full rounded-full bg-primary transition-[width]"
 			style="width: {(includedShare * 100).toFixed(1)}%"
@@ -62,7 +63,7 @@
 	</div>
 
 	{#if fieldBreakdown.length > 0}
-		<div class="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+		<div class="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
 			{#each fieldBreakdown as entry (entry.field)}
 				<span>
 					{entry.label}: <span class="font-medium text-foreground">{entry.selectedCount}</span> of

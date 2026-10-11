@@ -3,7 +3,7 @@
 	import { toast } from 'svelte-sonner';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import ReportChart from '$lib/components/ReportChart.svelte';
-	import ReportFilterSummary from '$lib/components/reports/ReportFilterSummary.svelte';
+	import ReportToolbar from '$lib/components/reports/ReportToolbar.svelte';
 	import ReportFormFields from '$lib/components/reports/ReportFormFields.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -49,9 +49,7 @@
 		<h1 class="text-2xl font-semibold">{title || 'Untitled report'}</h1>
 	</PageHeader>
 
-	<div class="mb-6">
-		<ReportFilterSummary holdings={data.holdings} {filters} />
-	</div>
+	<ReportToolbar holdings={data.holdings} bind:chartType bind:filters />
 
 	<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
 		<form
@@ -72,7 +70,6 @@
 				bind:title
 				bind:metric
 				bind:dimension
-				bind:chartType
 				bind:filters
 				{titleError}
 			/>

@@ -36,6 +36,10 @@
 	const slices = $derived(computeSlices(holdings, config));
 	const total = $derived(slices.reduce((sum, slice) => sum + slice.value, 0));
 
+	// Narrow containers (phones, side-by-side layouts) get a simpler pie/bar layout.
+	let chartWidth = $state(0);
+	const compact = $derived(chartWidth > 0 && chartWidth < 520);
+
 	const seriesName = $derived(METRIC_LABELS[config.metric]);
 
 	const filterField = $derived(DIMENSION_FILTER_FIELD[config.dimension]);
@@ -63,6 +67,7 @@
 			textStyle: { fontSize: 13 }
 		},
 		legend: {
+			type: 'scroll',
 			bottom: 0,
 			icon: 'circle',
 			itemWidth: 8,
@@ -73,17 +78,17 @@
 			{
 				name: seriesName,
 				type: 'pie',
-				radius: '70%',
-				center: ['50%', '46%'],
+				radius: compact ? '60%' : '70%',
+				center: ['50%', compact ? '42%' : '46%'],
 				avoidLabelOverlap: true,
 				itemStyle: { borderColor: SURFACE, borderWidth: 2 },
 				label: {
-					show: true,
+					show: !compact,
 					color: TEXT_MUTED,
 					fontSize: 12,
 					formatter: (params) => `${(params.percent ?? 0).toFixed(0)}%`
 				},
-				labelLine: { show: true },
+				labelLine: { show: !compact },
 				data: slices.map((slice, index) => ({
 					name: slice.label,
 					value: slice.value,
@@ -102,10 +107,10 @@
 			textStyle: { fontSize: 13 }
 		},
 		grid: {
-			left: 56,
+			left: compact ? 48 : 56,
 			right: 16,
 			top: 24,
-			bottom: slices.length > 8 ? 64 : 40
+			bottom: compact || slices.length > 8 ? 72 : 40
 		},
 		xAxis: {
 			type: 'category',
@@ -113,7 +118,10 @@
 			axisLabel: {
 				color: TEXT_MUTED,
 				fontSize: 11,
-				rotate: slices.length > 8 ? 30 : 0
+				rotate: compact ? 45 : slices.length > 8 ? 30 : 0,
+				interval: compact ? 'auto' : undefined,
+				width: compact ? 80 : undefined,
+				overflow: compact ? 'truncate' : undefined
 			},
 			axisLine: { lineStyle: { color: GRID_LINE } }
 		},
@@ -143,8 +151,8 @@
 	const option = $derived(config.chartType === 'pie' ? pieOption : barOption);
 </script>
 
-<div class="flex flex-col rounded-lg border bg-card p-6 {fill ? 'h-full' : ''}">
-	<div class="flex items-center justify-between">
+<div class="flex flex-col rounded-lg border bg-card p-4 sm:p-6 {fill ? 'h-full' : ''}">
+	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
 		<div>
 			{#if reportId}
 				<a
@@ -191,8 +199,15 @@
 			</table>
 		</div>
 	{:else}
-		<div class="mt-6 {fill ? 'min-h-0 flex-1' : ''}">
-			<EChart {option} height={fill ? '100%' : '320px'} onItemClick={handleChartClick} />
+		<div
+			class="mt-6 min-w-0 overflow-hidden {fill ? 'min-h-0 flex-1' : ''}"
+			bind:clientWidth={chartWidth}
+		>
+			<EChart
+				{option}
+				height={fill ? '100%' : compact ? '300px' : '320px'}
+				onItemClick={handleChartClick}
+			/>
 		</div>
 	{/if}
 </div>
