@@ -60,10 +60,7 @@
 		{/if}
 	</PageHeader>
 
-	<SecurityDetailTable
-		data={data.holdings}
-		{trailingColumns}
-	/>
+	<SecurityDetailTable data={data.holdings} {trailingColumns} />
 </div>
 
 <Drawer.Root bind:open={editOpen} direction="right">

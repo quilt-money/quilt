@@ -41,10 +41,4 @@
 	const columns = $derived([...leadingColumns, ...baseColumns, ...trailingColumns]);
 </script>
 
-<DataTable
-	{data}
-	{columns}
-	{onRowClick}
-	bind:filteredData
-	bind:activeFilters
-/>
+<DataTable {data} {columns} {onRowClick} bind:filteredData bind:activeFilters />
