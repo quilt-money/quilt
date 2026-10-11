@@ -104,7 +104,13 @@ export const actions = {
 		if (ids.length === 0) return fail(400, { error: 'Select at least one security' });
 
 		const securities = await db
-			.select({ id: security.id, symbol: security.symbol })
+			.select({
+				id: security.id,
+				symbol: security.symbol,
+				typeId: security.typeId,
+				sectorId: security.sectorId,
+				regionId: security.regionId
+			})
 			.from(security)
 			.where(inArray(security.id, ids));
 
@@ -113,18 +119,20 @@ export const actions = {
 			db.select().from(sector),
 			db.select().from(region)
 		]);
-		const typeIdByName = new Map(securityTypes.map((t) => [t.name, t.id]));
-		const sectorIdByName = new Map(sectors.map((s) => [s.name, s.id]));
-		const regionIdByName = new Map(regions.map((r) => [r.name, r.id]));
+		const typeIdByName = new Map(
+			securityTypes.map((securityType) => [securityType.name, securityType.id])
+		);
+		const sectorIdByName = new Map(sectors.map((sector) => [sector.name, sector.id]));
+		const regionIdByName = new Map(regions.map((region) => [region.name, region.id]));
 
 		const snapshotTime = new Date().toISOString();
 
-		for (const s of securities) {
+		for (const existingSecurity of securities) {
 			let profile;
 			try {
-				profile = await fetchFmpProfile(fetch, env.FMP_API_KEY, s.symbol);
-			} catch (err) {
-				console.error(`FMP sync failed for ${s.symbol}:`, err);
+				profile = await fetchFmpProfile(fetch, env.FMP_API_KEY, existingSecurity.symbol);
+			} catch (error) {
+				console.error(`FMP sync failed for ${existingSecurity.symbol}:`, error);
 				continue;
 			}
 			if (!profile) continue;
@@ -139,16 +147,24 @@ export const actions = {
 				.update(security)
 				.set({
 					fullName: profile.companyName ? normalizeCompanyName(profile.companyName) : undefined,
-					typeId: typeIdByName.get(typeName),
-					sectorId: isFundOrEtf ? null : gicsSector ? sectorIdByName.get(gicsSector) : undefined,
-					regionId: regionIdByName.get(regionName)
+					// Type, sector, and region are only filled in when empty so manual
+					// edits are never overwritten by the sync response.
+					typeId: existingSecurity.typeId ? undefined : typeIdByName.get(typeName),
+					sectorId: existingSecurity.sectorId
+						? undefined
+						: isFundOrEtf
+							? null
+							: gicsSector
+								? sectorIdByName.get(gicsSector)
+								: undefined,
+					regionId: existingSecurity.regionId ? undefined : regionIdByName.get(regionName)
 				})
-				.where(eq(security.id, s.id));
+				.where(eq(security.id, existingSecurity.id));
 
 			if (profile.price != null) {
 				await db
 					.insert(priceSnapshot)
-					.values({ securityId: s.id, price: profile.price, snapshotTime })
+					.values({ securityId: existingSecurity.id, price: profile.price, snapshotTime })
 					.onConflictDoUpdate({
 						target: [priceSnapshot.securityId, priceSnapshot.snapshotTime],
 						set: { price: profile.price }
