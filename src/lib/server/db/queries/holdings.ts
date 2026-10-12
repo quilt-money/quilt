@@ -24,6 +24,7 @@ export function holdingRows() {
 		.select({
 			id: holding.id,
 			shares: holding.shares,
+			costBasis: holding.costBasis,
 			accountId: holding.accountId,
 			accountName: account.name,
 			securityId: holding.securityId,
@@ -46,19 +47,26 @@ export function holdingRows() {
 
 export type HoldingWithValue = Awaited<ReturnType<typeof holdingRows>>[number] & {
 	totalValue: number | null;
+	gainLoss: number | null;
+	gainLossPercent: number | null;
 };
 
 /**
- * Adds each holding's market value (shares × latest price) to rows from {@link holdingRows}.
+ * Adds each holding's market value (shares × latest price) and gain/loss against its cost basis
+ * to rows from {@link holdingRows}. Cost basis is the total paid for the position, not per share.
  * Computed in JS since drizzle's query builder has no cross-column multiply operator
  * outside a raw sql tag.
  */
 export function withTotalValue(rows: Awaited<ReturnType<typeof holdingRows>>): HoldingWithValue[] {
-	return rows.map((holding) => ({
-		...holding,
-		totalValue:
-			holding.shares != null && holding.price != null ? holding.shares * holding.price : null
-	}));
+	return rows.map((holding) => {
+		const totalValue =
+			holding.shares != null && holding.price != null ? holding.shares * holding.price : null;
+		const gainLoss =
+			totalValue != null && holding.costBasis != null ? totalValue - holding.costBasis : null;
+		const gainLossPercent =
+			gainLoss != null && holding.costBasis ? (gainLoss / holding.costBasis) * 100 : null;
+		return { ...holding, totalValue, gainLoss, gainLossPercent };
+	});
 }
 
 export type HoldingWithTags = HoldingWithValue & {

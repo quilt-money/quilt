@@ -10,7 +10,7 @@
 	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
-	import { formatMoney } from '$lib/format';
+	import { formatMoney, formatPercent, gainLossClass } from '$lib/format';
 
 	let { data } = $props();
 
@@ -90,6 +90,17 @@
 			accessorKey: 'totalValue',
 			header: 'Total value',
 			cell: (ctx) => formatMoney(ctx.getValue() as number | null)
+		},
+		{
+			accessorKey: 'gainLoss',
+			header: 'Gain/loss ($)',
+			cell: (ctx) => renderSnippet(gainLossCell, { value: ctx.getValue() as number | null })
+		},
+		{
+			accessorKey: 'gainLossPercent',
+			header: 'Gain/loss (%)',
+			cell: (ctx) =>
+				renderSnippet(gainLossCell, { value: ctx.getValue() as number | null, percent: true })
 		}
 	];
 
@@ -113,6 +124,12 @@
 		selected = new Set();
 	});
 </script>
+
+{#snippet gainLossCell({ value, percent = false }: { value: number | null; percent?: boolean })}
+	<span class={gainLossClass(value)}>
+		{#if value != null && value > 0}+{/if}{percent ? formatPercent(value) : formatMoney(value)}
+	</span>
+{/snippet}
 
 {#snippet tagsCell(tags: string[])}
 	<div class="flex flex-wrap gap-1">
