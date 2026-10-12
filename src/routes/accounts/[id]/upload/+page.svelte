@@ -263,6 +263,12 @@
 							{uploadResult.holdingsUploaded}
 							{uploadResult.holdingsUploaded === 1 ? 'holding row' : 'holding rows'} uploaded
 						</p>
+						{#if uploadResult.holdingsRemoved > 0}
+							<p class="font-semibold">
+								{uploadResult.holdingsRemoved}
+								{uploadResult.holdingsRemoved === 1 ? 'holding' : 'holdings'} removed (not in CSV)
+							</p>
+						{/if}
 					</div>
 				</div>
 			{:else}

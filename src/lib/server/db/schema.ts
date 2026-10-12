@@ -51,7 +51,8 @@ export const holding = sqliteTable(
 		securityId: text('security_id')
 			.notNull()
 			.references(() => security.id, { onDelete: 'cascade' }),
-		shares: real('shares')
+		shares: real('shares'),
+		costBasis: real('cost_basis')
 	},
 	(t) => [unique().on(t.accountId, t.securityId)]
 );
@@ -113,20 +114,3 @@ export const dashboardItem = sqliteTable('dashboard_item', {
 	columnSpan: integer('column_span').notNull(),
 	rowSpan: integer('row_span').notNull()
 });
-
-export const priceBasis = sqliteTable(
-	'price_basis',
-	{
-		id: text('id')
-			.primaryKey()
-			.$defaultFn(() => crypto.randomUUID()),
-		accountId: text('account_id')
-			.notNull()
-			.references(() => account.id, { onDelete: 'cascade' }),
-		securityId: text('security_id')
-			.notNull()
-			.references(() => security.id, { onDelete: 'cascade' }),
-		amountSpent: real('amount_spent').notNull()
-	},
-	(t) => [unique().on(t.accountId, t.securityId)]
-);

@@ -1,16 +1,16 @@
 import { db } from '$lib/server/db';
 import { account, security, holding } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, notInArray } from 'drizzle-orm';
 import { error, fail } from '@sveltejs/kit';
 import { parse } from 'csv/sync';
 import { HOLDINGS_CSV_HEADER, isValidCsvHeader } from '$lib/holdings-csv';
 
-type CsvRow = { Symbol: string; Name: string; Shares: string };
+type CsvRow = { Symbol: string; Shares: string; Basis: string };
 
 type HoldingRow = {
 	symbol: string;
-	fullName: string | null;
 	shares: number | null;
+	costBasis: number | null;
 };
 
 export async function load({ params }) {
@@ -55,49 +55,72 @@ export const actions = {
 				return fail(400, { message: `Row ${line}: Shares must be a number` });
 			}
 
-			rows.push({ symbol, fullName: row.Name?.trim() || null, shares });
+			const basisRaw = row.Basis?.trim();
+			const costBasis = basisRaw ? Number(basisRaw) : null;
+
+			if (costBasis !== null && Number.isNaN(costBasis)) {
+				return fail(400, { message: `Row ${line}: Basis must be a number` });
+			}
+
+			rows.push({ symbol, shares, costBasis });
 		}
 
 		const uploadedSecurities: { symbol: string; isNew: boolean }[] = [];
 
+		let holdingsRemoved = 0;
+
 		db.transaction((tx) => {
+			const uploadedSecurityIds: string[] = [];
+
 			for (const row of rows) {
-				let sec = tx
+				let existingSecurity = tx
 					.select({ id: security.id })
 					.from(security)
 					.where(eq(security.symbol, row.symbol))
 					.get();
 
-				const isNew = !sec;
-				if (!sec) {
-					sec = tx
+				const isNew = !existingSecurity;
+				if (!existingSecurity) {
+					existingSecurity = tx
 						.insert(security)
 						.values({ symbol: row.symbol })
 						.returning({ id: security.id })
 						.get();
 				}
 				uploadedSecurities.push({ symbol: row.symbol, isNew });
+				uploadedSecurityIds.push(existingSecurity.id);
 
 				tx.insert(holding)
 					.values({
 						accountId: params.id,
-						securityId: sec.id,
-						shares: row.shares
+						securityId: existingSecurity.id,
+						shares: row.shares,
+						costBasis: row.costBasis
 					})
 					.onConflictDoUpdate({
 						target: [holding.accountId, holding.securityId],
-						set: { shares: row.shares }
+						set: { shares: row.shares, costBasis: row.costBasis }
 					})
 					.run();
 			}
+
+			// The CSV is the entire account, so anything it omits has been sold.
+			holdingsRemoved = tx
+				.delete(holding)
+				.where(
+					and(eq(holding.accountId, params.id), notInArray(holding.securityId, uploadedSecurityIds))
+				)
+				.returning({ id: holding.id })
+				.all().length;
 		});
 
 		return {
 			success: true,
 			securities: uploadedSecurities,
-			securitiesInserted: uploadedSecurities.filter((s) => s.isNew).length,
-			securitiesExisting: uploadedSecurities.filter((s) => !s.isNew).length,
-			holdingsUploaded: rows.length
+			securitiesInserted: uploadedSecurities.filter((security) => security.isNew).length,
+			securitiesExisting: uploadedSecurities.filter((security) => !security.isNew).length,
+			holdingsUploaded: rows.length,
+			holdingsRemoved
 		};
 	}
 };
