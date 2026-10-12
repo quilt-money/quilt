@@ -112,6 +112,11 @@ export const actions = {
 				)
 				.returning({ id: holding.id })
 				.all().length;
+
+			tx.update(account)
+				.set({ lastUpdated: new Date().toISOString() })
+				.where(eq(account.id, params.id))
+				.run();
 		});
 
 		return {

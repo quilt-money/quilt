@@ -36,7 +36,8 @@ export const account = sqliteTable('account', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	name: text('name').notNull().unique()
+	name: text('name').notNull().unique(),
+	lastUpdated: text('last_updated')
 });
 
 export const holding = sqliteTable(

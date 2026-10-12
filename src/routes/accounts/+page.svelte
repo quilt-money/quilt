@@ -10,6 +10,7 @@
 	import { resolve } from '$app/paths';
 	import DataTable, { type DataTableColumn } from '$lib/components/data-table/DataTable.svelte';
 	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
+	import { formatDateTime } from '$lib/format';
 	import { renderSnippet } from '@tanstack/svelte-table';
 
 	let { data } = $props();
@@ -26,6 +27,12 @@
 			accessorKey: 'tags',
 			enableGlobalFilter: false,
 			cell: (ctx) => renderSnippet(tagsCell, ctx.getValue() as string[])
+		},
+		{
+			accessorKey: 'lastUpdated',
+			header: 'Last updated',
+			enableGlobalFilter: false,
+			cell: (ctx) => formatDateTime(ctx.getValue() as string | null)
 		}
 	];
 </script>
