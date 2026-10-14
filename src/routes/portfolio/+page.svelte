@@ -1,5 +1,4 @@
 <script lang="ts">
-	import XIcon from '@lucide/svelte/icons/x';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { renderComponent, renderSnippet } from '@tanstack/svelte-table';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -9,6 +8,7 @@
 	} from '$lib/components/data-table/DataTable.svelte';
 	import SecurityDetailTable from '$lib/components/data-table/SecurityDetailTable.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import PortfolioSummary from '$lib/components/portfolio/PortfolioSummary.svelte';
 	import TableSearch from '$lib/components/data-table/TableSearch.svelte';
 	import { formatMoney, formatPercent, gainLossClass } from '$lib/format';
 
@@ -50,11 +50,10 @@
 		}
 		return 'Balance in current view';
 	});
-	const balance = $derived(
-		sumValue(
-			selected.size > 0 ? filteredRows.filter((holding) => selected.has(holding.id)) : filteredRows
-		)
+	const balanceHoldings = $derived(
+		selected.size > 0 ? filteredRows.filter((holding) => selected.has(holding.id)) : filteredRows
 	);
+	const balance = $derived(sumValue(balanceHoldings));
 
 	const leadingColumns: DataTableColumn<HoldingRow>[] = [
 		{
@@ -104,10 +103,6 @@
 		}
 	];
 
-	const hasActiveFilters = $derived(
-		activeFilters.search.length > 0 || activeFilters.columns.length > 0
-	);
-
 	// A string so the effect below only reruns when the filters actually change,
 	// not every time DataTable hands back a fresh activeFilters object.
 	const filterKey = $derived(
@@ -149,41 +144,18 @@
 	<PageHeader>
 		{#snippet toolbar()}
 			<TableSearch />
-			<!-- Chips are shorter than the search input, so they fit this row without growing the header. -->
-			{#if hasActiveFilters}
-				<div class="flex flex-wrap items-center gap-2 border-l pl-3">
-					<span class="text-sm font-medium text-muted-foreground">Filtered by</span>
-					{#if activeFilters.search}
-						<button
-							type="button"
-							class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
-							onclick={activeFilters.clearSearch}
-						>
-							Search: "{activeFilters.search}"
-							<XIcon class="size-4" />
-						</button>
-					{/if}
-					{#each activeFilters.columns as filter (filter.id)}
-						<button
-							type="button"
-							class="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium hover:bg-accent"
-							onclick={filter.clear}
-						>
-							{filter.label}: {filter.values.join(' and ')}
-							<XIcon class="size-4" />
-						</button>
-					{/each}
-				</div>
-			{/if}
 		{/snippet}
-		<div>
-			<h1 class="text-2xl font-semibold">Portfolio</h1>
-			<p class="text-sm font-medium text-muted-foreground">
-				Total portfolio value: {formatMoney(totalPortfolioValue)}
-			</p>
-		</div>
-		<span class="text-sm font-medium">{balanceLabel} {formatMoney(balance)}</span>
+		<h1 class="text-2xl font-semibold">Portfolio</h1>
 	</PageHeader>
+
+	<PortfolioSummary
+		totalValue={totalPortfolioValue}
+		totalCount={data.holdings.length}
+		{balanceLabel}
+		{balance}
+		balanceCount={balanceHoldings.length}
+		{activeFilters}
+	/>
 
 	<SecurityDetailTable
 		data={data.holdings}
