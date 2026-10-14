@@ -2,7 +2,7 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import type { DataTableFilterSummary } from '$lib/components/data-table/DataTable.svelte';
 	import SectionatedHeader from '$lib/components/SectionatedHeader.svelte';
-	import { formatMoney } from '$lib/format';
+	import { formatMoney, formatPercent, gainLossClass } from '$lib/format';
 
 	let {
 		totalValue,
@@ -10,6 +10,8 @@
 		balanceLabel,
 		balance,
 		balanceCount,
+		balanceGainLoss,
+		averageGainLossPercent,
 		activeFilters
 	}: {
 		totalValue: number;
@@ -17,6 +19,8 @@
 		balanceLabel: string;
 		balance: number;
 		balanceCount: number;
+		balanceGainLoss: number;
+		averageGainLossPercent: number | null;
 		activeFilters: DataTableFilterSummary;
 	} = $props();
 
@@ -26,13 +30,13 @@
 </script>
 
 <SectionatedHeader>
-	<div class="flex flex-col gap-2 p-4 xl:min-w-64">
+	<div class="flex min-w-0 flex-1 flex-col gap-2 p-4">
 		<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Total balance</p>
 		<p class="text-2xl font-semibold">{formatMoney(totalValue)}</p>
 		<p class="text-sm text-muted-foreground">{totalCount.toLocaleString()} holdings</p>
 	</div>
 
-	<div class="flex flex-col gap-2 p-4 xl:min-w-64">
+	<div class="flex min-w-0 flex-1 flex-col gap-2 p-4">
 		<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
 			{balanceLabel}
 		</p>
@@ -42,7 +46,24 @@
 		</p>
 	</div>
 
-	<div class="flex min-w-0 flex-1 flex-col gap-2 p-4 xl:min-w-80">
+	<div class="flex min-w-0 flex-1 flex-col gap-2 p-4">
+		<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+			Gain/loss in current view
+		</p>
+		<p class="text-2xl font-semibold {gainLossClass(balanceGainLoss)}">
+			{#if balanceGainLoss > 0}+{/if}{formatMoney(balanceGainLoss)}
+		</p>
+		<p class="text-sm text-muted-foreground">
+			Weighted average
+			<span class="font-medium {gainLossClass(averageGainLossPercent)}">
+				{#if averageGainLossPercent != null && averageGainLossPercent > 0}+{/if}{formatPercent(
+					averageGainLossPercent
+				)}
+			</span>
+		</p>
+	</div>
+
+	<div class="flex min-w-0 flex-1 flex-col gap-2 p-4">
 		<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Applied filters</p>
 		{#if hasActiveFilters}
 			<div class="flex flex-wrap items-center gap-2">

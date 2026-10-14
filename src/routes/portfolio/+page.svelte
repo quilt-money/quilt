@@ -54,6 +54,26 @@
 		selected.size > 0 ? filteredRows.filter((holding) => selected.has(holding.id)) : filteredRows
 	);
 	const balance = $derived(sumValue(balanceHoldings));
+	const balanceGainLoss = $derived(
+		balanceHoldings.reduce((sum, holding) => sum + (holding.gainLoss ?? 0), 0)
+	);
+	// Value-weighted: total gain/loss over total cost basis, so bigger positions count for more.
+	// Holdings without a basis have no percent, so they're left out of both sums.
+	const averageGainLossPercent = $derived.by(() => {
+		const holdingsWithBasis = balanceHoldings.filter(
+			(holding) => holding.gainLoss != null && holding.costBasis
+		);
+		const totalCostBasis = holdingsWithBasis.reduce(
+			(sum, holding) => sum + (holding.costBasis ?? 0),
+			0
+		);
+		if (totalCostBasis === 0) return null;
+		const totalGainLoss = holdingsWithBasis.reduce(
+			(sum, holding) => sum + (holding.gainLoss ?? 0),
+			0
+		);
+		return (totalGainLoss / totalCostBasis) * 100;
+	});
 
 	const leadingColumns: DataTableColumn<HoldingRow>[] = [
 		{
@@ -154,6 +174,8 @@
 		{balanceLabel}
 		{balance}
 		balanceCount={balanceHoldings.length}
+		{balanceGainLoss}
+		{averageGainLossPercent}
 		{activeFilters}
 	/>
 
