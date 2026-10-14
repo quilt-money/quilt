@@ -3,6 +3,7 @@
 	import WalletIcon from '@lucide/svelte/icons/wallet';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
 	import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
+	import SettingsIcon from '@lucide/svelte/icons/settings';
 
 	const navItems = [
 		{ title: 'Portfolio', url: '/portfolio', icon: PiggyBankIcon },
@@ -97,5 +98,19 @@
 			</Sidebar.Group>
 		</Collapsible.Root>
 	</Sidebar.Content>
+	<Sidebar.Footer>
+		<Sidebar.Menu>
+			<Sidebar.MenuItem>
+				<Sidebar.MenuButton class="text-base">
+					{#snippet child({ props })}
+						<a href={resolve('/settings')} {...props}>
+							<SettingsIcon />
+							Settings
+						</a>
+					{/snippet}
+				</Sidebar.MenuButton>
+			</Sidebar.MenuItem>
+		</Sidebar.Menu>
+	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

@@ -31,6 +31,7 @@
 			const title = (page.data as { report?: { title: string } }).report?.title ?? 'Report';
 			return [{ label: 'Reports', href: '/reports' }, { label: title }];
 		}
+		if (path === '/settings') return [{ label: 'Settings' }];
 		if (path === '/securities') return [{ label: 'Securities' }];
 		if (path.startsWith('/securities/')) {
 			const symbol =
