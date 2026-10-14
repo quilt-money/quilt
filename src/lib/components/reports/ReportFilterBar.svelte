@@ -5,26 +5,39 @@
 		FILTER_FIELDS,
 		FILTER_LABELS,
 		filterOptions,
+		type FilterField,
 		type ReportFilters
 	} from '$lib/report-builder';
 
 	let { holdings, filters = $bindable() }: { holdings: HoldingWithTags[]; filters: ReportFilters } =
 		$props();
 
-	// Accounts are chosen with the checklist beside the report, not a dropdown.
-	const dropdownFilterFields = FILTER_FIELDS.filter((field) => field !== 'accountName');
+	const dropdownFilterFields = FILTER_FIELDS.filter(
+		(field) => field !== 'accountName' && field !== 'accountTags' && field !== 'securityTags'
+	);
+
+	function section(field: FilterField, heading?: string) {
+		return {
+			heading,
+			options: filterOptions(holdings, field),
+			selected: filters[field] ?? [],
+			onChange: (values: string[]) => (filters = { ...filters, [field]: values })
+		};
+	}
 </script>
 
 <div class="flex flex-col gap-2 p-4">
 	<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Filters</p>
 	<div class="flex flex-wrap gap-2">
 		{#each dropdownFilterFields as field (field)}
-			<MultiSelectFilter
-				label={FILTER_LABELS[field]}
-				options={filterOptions(holdings, field)}
-				selected={filters[field] ?? []}
-				onChange={(values) => (filters = { ...filters, [field]: values })}
-			/>
+			<MultiSelectFilter label={FILTER_LABELS[field]} sections={[section(field)]} />
 		{/each}
+		<MultiSelectFilter
+			label="Tag"
+			sections={[
+				section('accountTags', FILTER_LABELS.accountTags),
+				section('securityTags', FILTER_LABELS.securityTags)
+			]}
+		/>
 	</div>
 </div>

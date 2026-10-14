@@ -40,6 +40,7 @@
 	let chartWidth = $state(0);
 	const compact = $derived(chartWidth > 0 && chartWidth < 520);
 
+	const isMoney = $derived(config.metric !== 'count');
 	const seriesName = $derived(METRIC_LABELS[config.metric]);
 
 	const filterField = $derived(DIMENSION_FILTER_FIELD[config.dimension]);
@@ -62,8 +63,16 @@
 		backgroundColor: 'transparent',
 		tooltip: {
 			trigger: 'item',
-			valueFormatter: (value) =>
-				config.metric === 'value' ? formatUsd(value as number) : `${value}`,
+			// Slices are sized by magnitude (a pie can't draw negatives), so show the signed value.
+			formatter: (params) => {
+				const { name, dataIndex, marker } = params as {
+					name: string;
+					dataIndex: number;
+					marker: string;
+				};
+				const value = slices[dataIndex]?.value ?? 0;
+				return `${marker} ${name}: <b>${isMoney ? formatUsd(value) : value}</b>`;
+			},
 			textStyle: { fontSize: 13 }
 		},
 		legend: {
@@ -91,7 +100,7 @@
 				labelLine: { show: !compact },
 				data: slices.map((slice, index) => ({
 					name: slice.label,
-					value: slice.value,
+					value: Math.abs(slice.value),
 					itemStyle: { color: CATEGORICAL[index % CATEGORICAL.length] }
 				}))
 			}
@@ -102,8 +111,7 @@
 		backgroundColor: 'transparent',
 		tooltip: {
 			trigger: 'axis',
-			valueFormatter: (value) =>
-				config.metric === 'value' ? formatUsd(value as number) : `${value}`,
+			valueFormatter: (value) => (isMoney ? formatUsd(value as number) : `${value}`),
 			textStyle: { fontSize: 13 }
 		},
 		grid: {
@@ -130,7 +138,7 @@
 			axisLabel: {
 				color: TEXT_MUTED,
 				fontSize: 11,
-				formatter: (value: number) => (config.metric === 'value' ? formatUsd(value) : `${value}`)
+				formatter: (value: number) => (isMoney ? formatUsd(value) : `${value}`)
 			},
 			splitLine: { lineStyle: { color: GRID_LINE } }
 		},

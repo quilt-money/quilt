@@ -1,10 +1,16 @@
 import { formatMoney } from '$lib/format';
 import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 
-export type Metric = 'value' | 'count';
+export type Metric = 'value' | 'gainLoss' | 'count';
 export type Dimension = 'none' | 'account' | 'sector' | 'region' | 'type' | 'security' | 'tags';
 export type ChartType = 'pie' | 'bar' | 'table';
-export type FilterField = 'accountName' | 'sector' | 'region' | 'type' | 'securityTags';
+export type FilterField =
+	| 'accountName'
+	| 'sector'
+	| 'region'
+	| 'type'
+	| 'accountTags'
+	| 'securityTags';
 export type ReportFilters = Record<FilterField, string[]>;
 
 /** The columns the portfolio table can be filtered on when drilling down from a report. */
@@ -19,6 +25,7 @@ export type ReportConfig = {
 
 export const METRIC_LABELS: Record<Metric, string> = {
 	value: 'Total value',
+	gainLoss: 'Total gain/loss',
 	count: 'Number of holdings'
 };
 
@@ -43,6 +50,7 @@ export const FILTER_LABELS: Record<FilterField, string> = {
 	sector: 'Sector',
 	region: 'Region',
 	type: 'Type',
+	accountTags: 'Account tag',
 	securityTags: 'Security tag'
 };
 
@@ -68,6 +76,7 @@ export function defaultReportConfig(holdings: HoldingWithTags[]): ReportConfig {
 			sector: filterOptions(holdings, 'sector'),
 			region: filterOptions(holdings, 'region'),
 			type: filterOptions(holdings, 'type'),
+			accountTags: filterOptions(holdings, 'accountTags'),
 			securityTags: filterOptions(holdings, 'securityTags')
 		}
 	};
@@ -120,8 +129,15 @@ export function computeSlices(holdings: HoldingWithTags[], config: ReportConfig)
 	const totalByLabel = new Map<string, number>();
 
 	for (const holding of filteredHoldings) {
+		// Holdings without a price or cost basis have no value or gain/loss to add.
 		if (config.metric === 'value' && holding.totalValue == null) continue;
-		const amount = config.metric === 'value' ? (holding.totalValue ?? 0) : 1;
+		if (config.metric === 'gainLoss' && holding.gainLoss == null) continue;
+		const amount =
+			config.metric === 'value'
+				? (holding.totalValue ?? 0)
+				: config.metric === 'gainLoss'
+					? (holding.gainLoss ?? 0)
+					: 1;
 		// A holding can carry multiple tags, so grouping by tag credits its value to
 		// every tag it has rather than forcing it into a single bucket. Only security
 		// tags are used here, not account tags.
@@ -142,7 +158,7 @@ export function computeSlices(holdings: HoldingWithTags[], config: ReportConfig)
 }
 
 export function formatMetricValue(metric: Metric, value: number): string {
-	return metric === 'value' ? formatMoney(value) : value.toLocaleString();
+	return metric !== 'count' ? formatMoney(value) : value.toLocaleString();
 }
 
 /** Distinct values present for a filter field, for populating its filter picker. */

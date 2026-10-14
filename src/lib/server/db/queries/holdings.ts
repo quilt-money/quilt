@@ -70,7 +70,9 @@ export function withTotalValue(rows: Awaited<ReturnType<typeof holdingRows>>): H
 }
 
 export type HoldingWithTags = HoldingWithValue & {
+	/** Account and security tags combined. */
 	tags: string[];
+	accountTags: string[];
 	securityTags: string[];
 };
 
@@ -97,6 +99,6 @@ export async function withTags(holdings: HoldingWithValue[]): Promise<HoldingWit
 			(a, b) => a.localeCompare(b)
 		);
 		const tags = [...new Set([...accountTags, ...securityTags])].sort((a, b) => a.localeCompare(b));
-		return { ...holding, tags, securityTags };
+		return { ...holding, tags, accountTags, securityTags };
 	});
 }
