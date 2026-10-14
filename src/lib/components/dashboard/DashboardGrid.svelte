@@ -3,6 +3,7 @@
 	import { Feedback, defaultPreset } from '@dnd-kit/dom';
 	import DashboardWidget from '$lib/components/dashboard/DashboardWidget.svelte';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
+	import type { PriceHistory } from '$lib/server/db/queries/price-history';
 	import type { DashboardItem, DashboardItemLayout } from '$lib/server/db/queries/dashboard';
 
 	const GRID_COLUMNS = 12;
@@ -25,12 +26,14 @@
 		items,
 		editMode,
 		holdings,
+		priceHistory,
 		onLayoutChange,
 		onRemove
 	}: {
 		items: DashboardItem[];
 		editMode: boolean;
 		holdings: HoldingWithTags[];
+		priceHistory: PriceHistory;
 		onLayoutChange: (reportId: string, layout: DashboardItemLayout) => void;
 		onRemove: (reportId: string) => void;
 	} = $props();
@@ -123,6 +126,7 @@
 				{item}
 				{editMode}
 				{holdings}
+				{priceHistory}
 				{columnWidthPx}
 				rowHeightPx={ROW_HEIGHT_PX}
 				gapPx={GAP_PX}

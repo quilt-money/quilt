@@ -1,5 +1,6 @@
 import { formatMoney } from '$lib/format';
 import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
+import type { PriceHistory } from '$lib/server/db/queries/price-history';
 
 export type Metric = 'value' | 'gainLoss' | 'count';
 export type Dimension = 'none' | 'account' | 'sector' | 'region' | 'type' | 'security' | 'tags';
@@ -22,6 +23,41 @@ export type ReportConfig = {
 	chartType: ChartType;
 	filters: ReportFilters;
 };
+
+/** Charts the total value of the filtered holdings over time, from the price snapshot history. */
+export type TimeChartType = 'area' | 'smooth' | 'line';
+
+export const TIME_CHART_TYPE_LABELS: Record<TimeChartType, string> = {
+	area: 'Area',
+	smooth: 'Smoothed line',
+	line: 'Line'
+};
+
+export type TimeInterval = 'day' | 'week' | 'month' | 'year';
+
+export const TIME_INTERVAL_LABELS: Record<TimeInterval, string> = {
+	day: 'Daily',
+	week: 'Weekly',
+	month: 'Monthly',
+	year: 'Yearly'
+};
+
+export type TimeReportConfig = {
+	reportType: 'time';
+	chartType: TimeChartType;
+	/** One point per step on the x-axis, taking the last value in each. */
+	interval: TimeInterval;
+	/** Inclusive YYYY-MM-DD bounds on the chart; an empty string leaves that side open. */
+	startDate: string;
+	endDate: string;
+	filters: ReportFilters;
+};
+
+export type SavedReportConfig = ReportConfig | TimeReportConfig;
+
+export function isTimeReportConfig(config: SavedReportConfig): config is TimeReportConfig {
+	return 'reportType' in config && config.reportType === 'time';
+}
 
 export const METRIC_LABELS: Record<Metric, string> = {
 	value: 'Total value',
@@ -173,4 +209,101 @@ export function filterOptions(holdings: HoldingWithTags[], field: FilterField): 
 		}
 	}
 	return [...values].sort((a, b) => a.localeCompare(b));
+}
+
+export function defaultTimeReportConfig(holdings: HoldingWithTags[]): TimeReportConfig {
+	return {
+		reportType: 'time',
+		chartType: 'area',
+		interval: 'day',
+		startDate: '',
+		endDate: '',
+		filters: defaultReportConfig(holdings).filters
+	};
+}
+
+export type TimeSeriesPoint = { time: string; value: number };
+
+/**
+ * Total value of the filtered holdings at each snapshot time. Only today's share counts are
+ * stored, so past values are today's shares at each past price. A point is only emitted once
+ * every included security has a price, otherwise the series would jump as securities appear.
+ * Points outside the config's date range are dropped, and each interval keeps only its last point.
+ */
+export function computeTimeSeries(
+	holdings: HoldingWithTags[],
+	priceHistory: PriceHistory,
+	{ filters, startDate, endDate, interval }: TimeReportConfig
+): TimeSeriesPoint[] {
+	const sharesBySecurityId = new Map<string, number>();
+	for (const holding of filterHoldings(holdings, filters)) {
+		if (holding.shares == null || !priceHistory[holding.securityId]?.length) continue;
+		sharesBySecurityId.set(
+			holding.securityId,
+			(sharesBySecurityId.get(holding.securityId) ?? 0) + holding.shares
+		);
+	}
+
+	const securityIds = [...sharesBySecurityId.keys()];
+	const times = [
+		...new Set(
+			securityIds.flatMap((securityId) => priceHistory[securityId].map(({ time }) => time))
+		)
+	].sort();
+
+	// Walk each security's history alongside the shared timeline, carrying its last price forward.
+	const nextIndexBySecurityId = new Map(securityIds.map((securityId) => [securityId, 0]));
+	const latestPriceBySecurityId = new Map<string, number>();
+	const points: TimeSeriesPoint[] = [];
+
+	for (const time of times) {
+		for (const securityId of securityIds) {
+			const history = priceHistory[securityId];
+			let nextIndex = nextIndexBySecurityId.get(securityId) ?? 0;
+			while (nextIndex < history.length && history[nextIndex].time <= time) {
+				latestPriceBySecurityId.set(securityId, history[nextIndex].price);
+				nextIndex++;
+			}
+			nextIndexBySecurityId.set(securityId, nextIndex);
+		}
+		if (latestPriceBySecurityId.size < securityIds.length) continue;
+
+		let value = 0;
+		for (const [securityId, shares] of sharesBySecurityId) {
+			value += shares * (latestPriceBySecurityId.get(securityId) ?? 0);
+		}
+		// The date range trims what's shown, but prices still carry forward from before it.
+		const date = time.slice(0, 10);
+		if ((startDate && date < startDate) || (endDate && date > endDate)) continue;
+		points.push({ time, value });
+	}
+
+	return lastPointPerInterval(points, interval);
+}
+
+/** The start of the day, ISO week (Monday), month or year that a snapshot time falls in. */
+function intervalKey(time: string, interval: TimeInterval): string {
+	const date = time.slice(0, 10);
+	switch (interval) {
+		case 'day':
+			return date;
+		case 'week': {
+			const weekStart = new Date(`${date}T00:00:00Z`);
+			weekStart.setUTCDate(weekStart.getUTCDate() - ((weekStart.getUTCDay() + 6) % 7));
+			return weekStart.toISOString().slice(0, 10);
+		}
+		case 'month':
+			return date.slice(0, 7);
+		case 'year':
+			return date.slice(0, 4);
+	}
+}
+
+function lastPointPerInterval(
+	points: TimeSeriesPoint[],
+	interval: TimeInterval
+): TimeSeriesPoint[] {
+	const lastPointByKey = new Map<string, TimeSeriesPoint>();
+	for (const point of points) lastPointByKey.set(intervalKey(point.time, interval), point);
+	return [...lastPointByKey.values()];
 }

@@ -1,5 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { holdingRows, withTags, withTotalValue } from '$lib/server/db/queries/holdings';
+import { getPriceHistory } from '$lib/server/db/queries/price-history';
+import { isTimeReportConfig } from '$lib/report-builder';
 import { listReports } from '$lib/server/db/queries/reports';
 import {
 	addDashboardItem,
@@ -15,7 +17,16 @@ export async function load() {
 		listDashboardItems()
 	]);
 
-	return { holdings: await withTags(withTotalValue(heldRows)), reports, dashboardItems };
+	// Price history is the bulk of the payload, so only fetch it when a time report needs it.
+	const needsPriceHistory = dashboardItems.some((item) => isTimeReportConfig(item.config));
+	const priceHistory = needsPriceHistory ? await getPriceHistory() : {};
+
+	return {
+		holdings: await withTags(withTotalValue(heldRows)),
+		reports,
+		dashboardItems,
+		priceHistory
+	};
 }
 
 export const actions = {

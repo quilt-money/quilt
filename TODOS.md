@@ -3,4 +3,4 @@
 - save filters on the portfolio page
 - cron job to sync prices
 - summary card - reports
-- incorporate account tags in the report filters
+- update datepicker on time based reports

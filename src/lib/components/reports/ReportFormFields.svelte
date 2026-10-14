@@ -22,8 +22,9 @@
 	}: {
 		holdings: HoldingWithTags[];
 		title: string;
-		metric: Metric;
-		dimension: Dimension;
+		/** Chart reports only; omit both for a report with no metric or grouping. */
+		metric?: Metric;
+		dimension?: Dimension;
 		filters: ReportFilters;
 		titleError?: string | null;
 	} = $props();
@@ -52,23 +53,27 @@
 	{/if}
 </div>
 
-<div class="grid gap-2">
-	<Label for="report-metric">Metric</Label>
-	<select id="report-metric" bind:value={metric} class={selectClass}>
-		{#each Object.entries(METRIC_LABELS) as [value, label] (value)}
-			<option {value}>{label}</option>
-		{/each}
-	</select>
-</div>
+{#if metric !== undefined}
+	<div class="grid gap-2">
+		<Label for="report-metric">Metric</Label>
+		<select id="report-metric" bind:value={metric} class={selectClass}>
+			{#each Object.entries(METRIC_LABELS) as [value, label] (value)}
+				<option {value}>{label}</option>
+			{/each}
+		</select>
+	</div>
+{/if}
 
-<div class="grid gap-2">
-	<Label for="report-dimension">Group by</Label>
-	<select id="report-dimension" bind:value={dimension} class={selectClass}>
-		{#each Object.entries(DIMENSION_LABELS) as [value, label] (value)}
-			<option {value}>{label}</option>
-		{/each}
-	</select>
-</div>
+{#if dimension !== undefined}
+	<div class="grid gap-2">
+		<Label for="report-dimension">Group by</Label>
+		<select id="report-dimension" bind:value={dimension} class={selectClass}>
+			{#each Object.entries(DIMENSION_LABELS) as [value, label] (value)}
+				<option {value}>{label}</option>
+			{/each}
+		</select>
+	</div>
+{/if}
 
 <div class="grid gap-2">
 	<div class="flex items-center justify-between">

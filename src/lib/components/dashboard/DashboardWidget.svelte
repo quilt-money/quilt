@@ -3,14 +3,18 @@
 	import GripIcon from '@lucide/svelte/icons/grip-vertical';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import ReportChart from '$lib/components/ReportChart.svelte';
+	import TimeReportChart from '$lib/components/TimeReportChart.svelte';
+	import { isTimeReportConfig } from '$lib/report-builder';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
+	import type { PriceHistory } from '$lib/server/db/queries/price-history';
 	import type { DashboardItem, DashboardItemLayout } from '$lib/server/db/queries/dashboard';
 
 	let {
 		item,
 		editMode,
 		holdings,
+		priceHistory,
 		columnWidthPx,
 		rowHeightPx,
 		gapPx,
@@ -23,6 +27,7 @@
 		item: DashboardItem;
 		editMode: boolean;
 		holdings: HoldingWithTags[];
+		priceHistory: PriceHistory;
 		columnWidthPx: number;
 		rowHeightPx: number;
 		gapPx: number;
@@ -155,13 +160,24 @@
 	style={widgetStyle}
 >
 	<div class="relative h-full">
-		<ReportChart
-			title={item.title}
-			{holdings}
-			config={item.config}
-			fill
-			reportId={editMode ? undefined : item.reportId}
-		/>
+		{#if isTimeReportConfig(item.config)}
+			<TimeReportChart
+				title={item.title}
+				{holdings}
+				{priceHistory}
+				config={item.config}
+				fill
+				reportId={editMode ? undefined : item.reportId}
+			/>
+		{:else}
+			<ReportChart
+				title={item.title}
+				{holdings}
+				config={item.config}
+				fill
+				reportId={editMode ? undefined : item.reportId}
+			/>
+		{/if}
 
 		{#if editMode}
 			<button

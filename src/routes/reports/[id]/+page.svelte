@@ -3,29 +3,55 @@
 	import { toast } from 'svelte-sonner';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import ReportChart from '$lib/components/ReportChart.svelte';
+	import TimeReportChart from '$lib/components/TimeReportChart.svelte';
 	import ReportToolbar from '$lib/components/reports/ReportToolbar.svelte';
+	import TimeReportToolbar from '$lib/components/reports/TimeReportToolbar.svelte';
 	import ReportFormFields from '$lib/components/reports/ReportFormFields.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import type {
-		Metric,
-		Dimension,
-		ChartType,
-		ReportFilters,
-		ReportConfig
+	import {
+		defaultReportConfig,
+		defaultTimeReportConfig,
+		type TimeChartType,
+		type TimeInterval,
+		isTimeReportConfig,
+		type Metric,
+		type Dimension,
+		type ChartType,
+		type ReportFilters,
+		type SavedReportConfig
 	} from '$lib/report-builder';
 
 	let { data } = $props();
 
 	let title = $state(data.report.title);
-	let metric = $state<Metric>(data.report.config.metric);
-	let dimension = $state<Dimension>(data.report.config.dimension);
-	let chartType = $state<ChartType>(data.report.config.chartType);
-	let filters = $state<ReportFilters>(data.report.config.filters);
+	const savedConfig = data.report.config;
+	const isTimeReport = isTimeReportConfig(savedConfig);
+	// A time report has no metric, grouping or chart type, so these only matter for chart reports.
+	const savedChartConfig = isTimeReportConfig(savedConfig)
+		? defaultReportConfig(data.holdings)
+		: savedConfig;
+
+	let metric = $state<Metric>(savedChartConfig.metric);
+	let dimension = $state<Dimension>(savedChartConfig.dimension);
+	let chartType = $state<ChartType>(savedChartConfig.chartType);
+	let filters = $state<ReportFilters>(savedConfig.filters);
+
+	const savedTimeConfig = isTimeReportConfig(savedConfig)
+		? savedConfig
+		: defaultTimeReportConfig(data.holdings);
+	let timeChartType = $state<TimeChartType>(savedTimeConfig.chartType);
+	let interval = $state<TimeInterval>(savedTimeConfig.interval);
+	let startDate = $state(savedTimeConfig.startDate);
+	let endDate = $state(savedTimeConfig.endDate);
 	let titleError = $state<string | null>(null);
 	let deleteOpen = $state(false);
 
-	const config = $derived<ReportConfig>({ metric, dimension, chartType, filters });
+	const config = $derived<SavedReportConfig>(
+		isTimeReport
+			? { reportType: 'time', chartType: timeChartType, interval, startDate, endDate, filters }
+			: { metric, dimension, chartType, filters }
+	);
 
 	$effect(() => {
 		if (titleError && title.trim().length > 0) titleError = null;
@@ -49,7 +75,18 @@
 		<h1 class="text-2xl font-semibold">{title || 'Untitled report'}</h1>
 	</PageHeader>
 
-	<ReportToolbar holdings={data.holdings} bind:chartType bind:filters />
+	{#if isTimeReport}
+		<TimeReportToolbar
+			holdings={data.holdings}
+			bind:chartType={timeChartType}
+			bind:interval
+			bind:startDate
+			bind:endDate
+			bind:filters
+		/>
+	{:else}
+		<ReportToolbar holdings={data.holdings} bind:chartType bind:filters />
+	{/if}
 
 	<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
 		<form
@@ -65,19 +102,27 @@
 			}}
 			class="flex flex-col gap-5 rounded-lg border bg-card p-5"
 		>
-			<ReportFormFields
-				holdings={data.holdings}
-				bind:title
-				bind:metric
-				bind:dimension
-				bind:filters
-				{titleError}
-			/>
+			{#if isTimeReport}
+				<ReportFormFields holdings={data.holdings} bind:title bind:filters {titleError} />
+			{:else}
+				<ReportFormFields
+					holdings={data.holdings}
+					bind:title
+					bind:metric
+					bind:dimension
+					bind:filters
+					{titleError}
+				/>
+			{/if}
 
 			<input type="hidden" name="config" value={JSON.stringify(config)} />
 		</form>
 
-		<ReportChart {title} holdings={data.holdings} {config} />
+		{#if isTimeReportConfig(config)}
+			<TimeReportChart {title} holdings={data.holdings} priceHistory={data.priceHistory} {config} />
+		{:else}
+			<ReportChart {title} holdings={data.holdings} {config} />
+		{/if}
 	</div>
 </div>
 

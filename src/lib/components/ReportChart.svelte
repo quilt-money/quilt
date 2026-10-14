@@ -1,9 +1,8 @@
 <script lang="ts">
 	import type { EChartsOption, ECElementEvent } from 'echarts';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import ArrowUpRightIcon from '@lucide/svelte/icons/arrow-up-right';
 	import EChart from '$lib/components/EChart.svelte';
+	import ReportCard from '$lib/components/reports/ReportCard.svelte';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 	import {
 		computeSlices,
@@ -159,29 +158,13 @@
 	const option = $derived(config.chartType === 'pie' ? pieOption : barOption);
 </script>
 
-<div class="flex flex-col rounded-lg border bg-card p-4 sm:p-6 {fill ? 'h-full' : ''}">
-	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-		<div>
-			{#if reportId}
-				<a
-					href={resolve('/reports/[id]', { id: reportId })}
-					class="group/report-link inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-				>
-					{title}
-					<ArrowUpRightIcon
-						class="size-3.5 transition-transform group-hover/report-link:translate-x-0.5 group-hover/report-link:-translate-y-0.5"
-					/>
-				</a>
-			{:else}
-				<p class="text-sm text-muted-foreground">{title}</p>
-			{/if}
-			<p class="mt-1 text-2xl font-semibold">{formatMetricValue(config.metric, total)}</p>
-		</div>
-		<p class="text-sm text-muted-foreground">
-			{filteredHoldings.length} of {holdings.length} holdings
-		</p>
-	</div>
-
+<ReportCard
+	{title}
+	headline={formatMetricValue(config.metric, total)}
+	aside="{filteredHoldings.length} of {holdings.length} holdings"
+	{fill}
+	{reportId}
+>
 	{#if slices.length === 0}
 		<p class="py-8 text-center text-sm text-muted-foreground">No holdings match these filters.</p>
 	{:else if config.chartType === 'table'}
@@ -218,4 +201,4 @@
 			/>
 		</div>
 	{/if}
-</div>
+</ReportCard>

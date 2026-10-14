@@ -2,16 +2,22 @@
 	import { enhance } from '$app/forms';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import ReportChart from '$lib/components/ReportChart.svelte';
+	import TimeReportChart from '$lib/components/TimeReportChart.svelte';
 	import ReportToolbar from '$lib/components/reports/ReportToolbar.svelte';
+	import TimeReportToolbar from '$lib/components/reports/TimeReportToolbar.svelte';
 	import ReportFormFields from '$lib/components/reports/ReportFormFields.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
 		defaultReportConfig,
+		defaultTimeReportConfig,
+		type TimeChartType,
+		type TimeInterval,
+		isTimeReportConfig,
 		type Metric,
 		type Dimension,
 		type ChartType,
 		type ReportFilters,
-		type ReportConfig
+		type SavedReportConfig
 	} from '$lib/report-builder';
 
 	let { data } = $props();
@@ -23,9 +29,20 @@
 	let dimension = $state<Dimension>(initialConfig.dimension);
 	let chartType = $state<ChartType>(initialConfig.chartType);
 	let filters = $state<ReportFilters>(initialConfig.filters);
+
+	const initialTimeConfig = defaultTimeReportConfig(data.holdings);
+	let timeChartType = $state<TimeChartType>(initialTimeConfig.chartType);
+	let interval = $state<TimeInterval>(initialTimeConfig.interval);
+	let startDate = $state(initialTimeConfig.startDate);
+	let endDate = $state(initialTimeConfig.endDate);
 	let titleError = $state<string | null>(null);
 
-	const config = $derived<ReportConfig>({ metric, dimension, chartType, filters });
+	const isTimeReport = $derived(data.reportType === 'time');
+	const config = $derived<SavedReportConfig>(
+		isTimeReport
+			? { reportType: 'time', chartType: timeChartType, interval, startDate, endDate, filters }
+			: { metric, dimension, chartType, filters }
+	);
 
 	$effect(() => {
 		if (titleError && title.trim().length > 0) titleError = null;
@@ -55,7 +72,18 @@
 			</p>
 		</div>
 	{:else}
-		<ReportToolbar holdings={data.holdings} bind:chartType bind:filters />
+		{#if isTimeReport}
+			<TimeReportToolbar
+				holdings={data.holdings}
+				bind:chartType={timeChartType}
+				bind:interval
+				bind:startDate
+				bind:endDate
+				bind:filters
+			/>
+		{:else}
+			<ReportToolbar holdings={data.holdings} bind:chartType bind:filters />
+		{/if}
 
 		<div class="grid gap-6 lg:grid-cols-[320px_1fr]">
 			<form
@@ -67,20 +95,33 @@
 				}}
 				class="flex flex-col gap-5 rounded-lg border bg-card p-4 sm:p-5"
 			>
-				<ReportFormFields
-					holdings={data.holdings}
-					bind:title
-					bind:metric
-					bind:dimension
-					bind:filters
-					{titleError}
-				/>
+				{#if isTimeReport}
+					<ReportFormFields holdings={data.holdings} bind:title bind:filters {titleError} />
+				{:else}
+					<ReportFormFields
+						holdings={data.holdings}
+						bind:title
+						bind:metric
+						bind:dimension
+						bind:filters
+						{titleError}
+					/>
+				{/if}
 
 				<input type="hidden" name="config" value={JSON.stringify(config)} />
 			</form>
 
 			<div class="min-w-0">
-				<ReportChart {title} holdings={data.holdings} {config} />
+				{#if isTimeReportConfig(config)}
+					<TimeReportChart
+						{title}
+						holdings={data.holdings}
+						priceHistory={data.priceHistory}
+						{config}
+					/>
+				{:else}
+					<ReportChart {title} holdings={data.holdings} {config} />
+				{/if}
 			</div>
 		</div>
 	{/if}

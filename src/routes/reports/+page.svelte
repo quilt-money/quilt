@@ -36,7 +36,7 @@
 		};
 	}
 
-	function createReport(reportType: 'chart' | 'summary') {
+	function createReport(reportType: 'chart' | 'time' | 'summary') {
 		goto(resolve(`/reports/new?reportType=${reportType}`));
 	}
 
@@ -108,6 +108,8 @@
 						<DropdownMenu.Trigger class={buttonVariants()}>Create report</DropdownMenu.Trigger>
 						<DropdownMenu.Content align="end">
 							<DropdownMenu.Item onSelect={() => createReport('chart')}>Chart</DropdownMenu.Item>
+							<DropdownMenu.Item onSelect={() => createReport('time')}>Time-based</DropdownMenu.Item
+							>
 							<DropdownMenu.Item onSelect={() => createReport('summary')}>
 								Summary
 							</DropdownMenu.Item>
@@ -132,6 +134,7 @@
 			{items}
 			{editMode}
 			holdings={data.holdings}
+			priceHistory={data.priceHistory}
 			onLayoutChange={moveReport}
 			onRemove={removeReport}
 		/>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import MultiSelectFilter from '$lib/components/MultiSelectFilter.svelte';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
 	import {
@@ -9,8 +10,16 @@
 		type ReportFilters
 	} from '$lib/report-builder';
 
-	let { holdings, filters = $bindable() }: { holdings: HoldingWithTags[]; filters: ReportFilters } =
-		$props();
+	let {
+		holdings,
+		filters = $bindable(),
+		children
+	}: {
+		holdings: HoldingWithTags[];
+		filters: ReportFilters;
+		/** Extra controls shown after the dropdowns, e.g. a date range. */
+		children?: Snippet;
+	} = $props();
 
 	const dropdownFilterFields = FILTER_FIELDS.filter(
 		(field) => field !== 'accountName' && field !== 'accountTags' && field !== 'securityTags'
@@ -39,5 +48,6 @@
 				section('securityTags', FILTER_LABELS.securityTags)
 			]}
 		/>
+		{#if children}{@render children()}{/if}
 	</div>
 </div>

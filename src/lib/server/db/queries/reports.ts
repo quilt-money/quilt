@@ -1,31 +1,31 @@
 import { db } from '$lib/server/db';
 import { report } from '$lib/server/db/schema';
 import { desc, eq } from 'drizzle-orm';
-import type { ReportConfig } from '$lib/report-builder';
+import type { SavedReportConfig } from '$lib/report-builder';
 
 export type SavedReport = {
 	id: string;
 	title: string;
-	config: ReportConfig;
+	config: SavedReportConfig;
 	createdAt: string;
 };
 
 export async function listReports(): Promise<SavedReport[]> {
 	const rows = await db.select().from(report).orderBy(desc(report.createdAt));
-	return rows.map((row) => ({ ...row, config: row.config as ReportConfig }));
+	return rows.map((row) => ({ ...row, config: row.config as SavedReportConfig }));
 }
 
 export async function getReport(id: string): Promise<SavedReport | undefined> {
 	const [row] = await db.select().from(report).where(eq(report.id, id)).limit(1);
 	if (!row) return undefined;
-	return { ...row, config: row.config as ReportConfig };
+	return { ...row, config: row.config as SavedReportConfig };
 }
 
-export async function createReport(title: string, config: ReportConfig) {
+export async function createReport(title: string, config: SavedReportConfig) {
 	await db.insert(report).values({ title, config });
 }
 
-export async function updateReport(id: string, title: string, config: ReportConfig) {
+export async function updateReport(id: string, title: string, config: SavedReportConfig) {
 	await db.update(report).set({ title, config }).where(eq(report.id, id));
 }
 
