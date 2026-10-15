@@ -1,22 +1,7 @@
 import { db } from '$lib/server/db';
-import {
-	security,
-	securityType,
-	sector,
-	region,
-	priceSnapshot,
-	holding,
-	account
-} from '$lib/server/db/schema';
+import { security, securityType, sector, region, holding, account } from '$lib/server/db/schema';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
-import {
-	FMP_SECTOR_TO_GICS,
-	fetchFmpProfile,
-	normalizeCompanyName,
-	regionBucketFor
-} from '$lib/server/fmp';
 import { securityRows } from '$lib/server/db/queries/securities';
 import { getTagsForEntities, listAllTagNames, syncEntityTags } from '$lib/server/db/queries/tags';
 
@@ -92,83 +77,6 @@ export const actions = {
 					...new Set([...(existingTagsBySecurityId.get(id) ?? []), ...tagsToAdd])
 				];
 				await syncEntityTags('security', id, mergedTags);
-			}
-		}
-	},
-
-	sync: async ({ request, fetch }) => {
-		if (!env.FMP_API_KEY) return fail(500, { error: 'FMP_API_KEY is not set' });
-
-		const data = await request.formData();
-		const ids = data.getAll('ids').map((id) => id.toString());
-		if (ids.length === 0) return fail(400, { error: 'Select at least one security' });
-
-		const securities = await db
-			.select({
-				id: security.id,
-				symbol: security.symbol,
-				typeId: security.typeId,
-				sectorId: security.sectorId,
-				regionId: security.regionId
-			})
-			.from(security)
-			.where(inArray(security.id, ids));
-
-		const [securityTypes, sectors, regions] = await Promise.all([
-			db.select().from(securityType),
-			db.select().from(sector),
-			db.select().from(region)
-		]);
-		const typeIdByName = new Map(
-			securityTypes.map((securityType) => [securityType.name, securityType.id])
-		);
-		const sectorIdByName = new Map(sectors.map((sector) => [sector.name, sector.id]));
-		const regionIdByName = new Map(regions.map((region) => [region.name, region.id]));
-
-		const snapshotTime = new Date().toISOString();
-
-		for (const existingSecurity of securities) {
-			let profile;
-			try {
-				profile = await fetchFmpProfile(fetch, env.FMP_API_KEY, existingSecurity.symbol);
-			} catch (error) {
-				console.error(`FMP sync failed for ${existingSecurity.symbol}:`, error);
-				continue;
-			}
-			if (!profile) continue;
-
-			const isFundOrEtf = profile.isEtf || profile.isFund;
-			const typeName = profile.isEtf ? 'ETF' : profile.isFund ? 'Mutual Fund' : 'Stock';
-			const gicsSector =
-				!isFundOrEtf && profile.sector ? FMP_SECTOR_TO_GICS[profile.sector] : undefined;
-			const regionName = regionBucketFor(profile.country);
-
-			await db
-				.update(security)
-				.set({
-					fullName: profile.companyName ? normalizeCompanyName(profile.companyName) : undefined,
-					// Type, sector, and region are only filled in when empty so manual
-					// edits are never overwritten by the sync response.
-					typeId: existingSecurity.typeId ? undefined : typeIdByName.get(typeName),
-					sectorId: existingSecurity.sectorId
-						? undefined
-						: isFundOrEtf
-							? null
-							: gicsSector
-								? sectorIdByName.get(gicsSector)
-								: undefined,
-					regionId: existingSecurity.regionId ? undefined : regionIdByName.get(regionName)
-				})
-				.where(eq(security.id, existingSecurity.id));
-
-			if (profile.price != null) {
-				await db
-					.insert(priceSnapshot)
-					.values({ securityId: existingSecurity.id, price: profile.price, snapshotTime })
-					.onConflictDoUpdate({
-						target: [priceSnapshot.securityId, priceSnapshot.snapshotTime],
-						set: { price: profile.price }
-					});
 			}
 		}
 	}

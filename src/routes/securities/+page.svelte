@@ -4,9 +4,10 @@
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import SyncDialog from '$lib/components/SyncDialog.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
 	import { toast } from 'svelte-sonner';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -20,7 +21,10 @@
 	let { data } = $props();
 
 	let selected = $state(new Set<string>());
-	let syncing = $state(false);
+	let syncDialogOpen = $state(false);
+	let syncTargets = $derived(
+		data.securitiesWithPricesAndSyncTimes.filter((security) => selected.has(security.id))
+	);
 
 	let bulkEditOpen = $state(false);
 	let bulkTypeId = $state('');
@@ -172,46 +176,47 @@
 {/snippet}
 
 <div class="p-6">
-	<form
-		method="POST"
-		action="?/sync"
-		use:enhance={() => {
-			syncing = true;
-			return async ({ update }) => {
-				await update();
-				selected = new Set();
-				syncing = false;
-			};
-		}}
-	>
-		<PageHeader>
-			{#snippet actions()}
-				<Button type="submit" variant="outline" disabled={syncing || selected.size === 0}>
-					{syncing ? 'Syncing…' : selected.size > 0 ? `Sync ${selected.size} securities` : 'Sync'}
-				</Button>
-				<Button
-					type="button"
-					variant="outline"
-					disabled={selected.size === 0}
-					onclick={() => (bulkEditOpen = true)}
-				>
-					{selected.size > 0 ? `Bulk edit ${selected.size} securities` : 'Bulk edit'}
-				</Button>
-			{/snippet}
-			{#snippet toolbar()}
-				<TableSearch placeholder="Search securities…" />
-			{/snippet}
-			<h1 class="text-2xl font-semibold">Securities</h1>
-		</PageHeader>
+	<PageHeader>
+		{#snippet actions()}
+			<Button
+				type="button"
+				variant="outline"
+				disabled={selected.size === 0}
+				onclick={() => (syncDialogOpen = true)}
+			>
+				{selected.size > 0 ? `Sync ${selected.size} securities` : 'Sync'}
+			</Button>
+			<Button
+				type="button"
+				variant="outline"
+				disabled={selected.size === 0}
+				onclick={() => (bulkEditOpen = true)}
+			>
+				{selected.size > 0 ? `Bulk edit ${selected.size} securities` : 'Bulk edit'}
+			</Button>
+		{/snippet}
+		{#snippet toolbar()}
+			<TableSearch placeholder="Search securities…" />
+		{/snippet}
+		<h1 class="text-2xl font-semibold">Securities</h1>
+	</PageHeader>
 
-		<SecurityDetailTable
-			data={data.securitiesWithPricesAndSyncTimes}
-			{leadingColumns}
-			{trailingColumns}
-			onRowClick={(row) => goto(resolve(`/securities/${row.id}`))}
-		/>
-	</form>
+	<SecurityDetailTable
+		data={data.securitiesWithPricesAndSyncTimes}
+		{leadingColumns}
+		{trailingColumns}
+		onRowClick={(row) => goto(resolve(`/securities/${row.id}`))}
+	/>
 </div>
+
+<SyncDialog
+	bind:open={syncDialogOpen}
+	securities={syncTargets}
+	onClose={async () => {
+		selected = new Set();
+		await invalidateAll();
+	}}
+/>
 
 <Drawer.Root bind:open={bulkEditOpen} direction="right">
 	<Drawer.Content>
