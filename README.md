@@ -51,6 +51,20 @@ Then start the container:
 docker compose -f docker/docker-compose.yml --project-directory . up -d
 ```
 
+#### Data storage
+
+The database lives at `/data` in the container. By default it is stored in a Docker named volume called `quilt-data`, which works on any machine with no setup.
+
+To store it in a folder on the host instead (for example, to back it up), set `QUILT_DATA` in `.env` to a path:
+
+```sh
+QUILT_DATA=./quilt-data
+```
+
+Relative paths resolve from the repo root. The container runs as the `node` user (uid 1000), so the folder must be writable by that user, or the database can't be opened.
+
+Changing `QUILT_DATA` points the app at a different location, so it starts with an empty database. Move your existing data over first if you want to keep it.
+
 ### Local development
 
 Requires [bun](https://bun.sh).
