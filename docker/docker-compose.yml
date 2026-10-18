@@ -1,9 +1,7 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    image: quilt
+    image: ghcr.io/quilt-money/quilt:latest
+    pull_policy: always
     ports:
       - '${PORT:-3000}:3000'
     environment:
