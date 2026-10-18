@@ -9,6 +9,6 @@ build
 !.env.example
 *.db
 *.bak
-Dockerfile
-docker-compose.yml
 data
+docker/Dockerfile*
+docker/docker-compose.yml

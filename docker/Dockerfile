@@ -16,5 +16,5 @@ RUN mkdir -p /data && chown node:node /data
 USER node
 VOLUME /data
 EXPOSE 3000
-ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["./docker/entrypoint.sh"]
 CMD ["node", "build"]

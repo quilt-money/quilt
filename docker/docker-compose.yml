@@ -1,6 +1,8 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     image: quilt
     ports:
       - '${PORT:-3000}:3000'
@@ -9,5 +11,8 @@ services:
       FMP_API_KEY: ${FMP_API_KEY:-}
       ORIGIN: ${ORIGIN:-http://localhost:3000}
     volumes:
-      - ../brokeage-holdings:/data
+      - ${QUILT_DATA:-quilt-data}:/data
     restart: unless-stopped
+
+volumes:
+  quilt-data:
