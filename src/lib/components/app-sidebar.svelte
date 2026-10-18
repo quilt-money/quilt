@@ -35,7 +35,7 @@
 <Sidebar.Root bind:ref collapsible="icon" {...restProps}>
 	<Sidebar.Header>
 		<h1 class="px-2 py-1 text-lg font-bold tracking-tight group-data-[collapsible=icon]:hidden">
-			Ignus
+			Quilt
 		</h1>
 	</Sidebar.Header>
 	<Sidebar.Content>

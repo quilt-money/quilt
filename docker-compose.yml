@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    image: portfolio-tracker
+    image: quilt
     ports:
       - '${PORT:-3000}:3000'
     environment:

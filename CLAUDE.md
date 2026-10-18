@@ -1,4 +1,4 @@
-# Portfolio tracker
+# Quilt
 
 SvelteKit app for tracking investment holdings across accounts. SQLite via Drizzle, UI built with shadcn-svelte + Tailwind v4, tables with TanStack Table.
 
