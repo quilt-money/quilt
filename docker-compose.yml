@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    image: portfolio-tracker
+    ports:
+      - '${PORT:-3000}:3000'
+    environment:
+      DATABASE_URL: /data/portfolio.db
+      FMP_API_KEY: ${FMP_API_KEY:-}
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+    volumes:
+      - ../brokeage-holdings:/data
+    restart: unless-stopped

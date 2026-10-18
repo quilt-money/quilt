@@ -1,0 +1,14 @@
+node_modules
+.svelte-kit
+build
+.git
+.claude
+.vscode
+.env
+.env.*
+!.env.example
+*.db
+*.bak
+Dockerfile
+docker-compose.yml
+data
