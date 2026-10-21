@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -14,6 +15,7 @@
 	let { data } = $props();
 
 	let open = $state(false);
+	let deleteOpen = $state(false);
 	let typeId = $state(untrack(() => data.security.typeId ?? ''));
 	let sectorId = $state(untrack(() => data.security.sectorId ?? ''));
 	let regionId = $state(untrack(() => data.security.regionId ?? ''));
@@ -68,6 +70,7 @@
 	<PageHeader>
 		{#snippet actions()}
 			<Button variant="outline" onclick={() => (open = true)}>Edit</Button>
+			<Button variant="destructive" onclick={() => (deleteOpen = true)}>Delete</Button>
 		{/snippet}
 		<div class="flex items-baseline gap-3">
 			<h1 class="text-2xl font-semibold">{data.security.symbol}</h1>
@@ -180,3 +183,21 @@
 		</form>
 	</Drawer.Content>
 </Drawer.Root>
+
+<Dialog.Root bind:open={deleteOpen}>
+	<Dialog.Content>
+		<form method="POST" action="?/delete" use:enhance class="flex flex-col gap-4">
+			<Dialog.Header>
+				<Dialog.Title>Delete {data.security.symbol}?</Dialog.Title>
+				<Dialog.Description>
+					This permanently deletes the security, its price history, and holdings across accounts.
+					{data.security.symbol} is used by {data.holdings.length} holdings.
+				</Dialog.Description>
+			</Dialog.Header>
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (deleteOpen = false)}>Cancel</Button>
+				<Button type="submit" variant="destructive">Delete</Button>
+			</Dialog.Footer>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>

@@ -9,7 +9,8 @@ import {
 	account
 } from '$lib/server/db/schema';
 import { desc, eq } from 'drizzle-orm';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
+import { resolve } from '$app/paths';
 import { getTagsForEntity, listAllTagNames, syncEntityTags } from '$lib/server/db/queries/tags';
 
 export async function load({ params }) {
@@ -76,5 +77,10 @@ export const actions = {
 
 		await db.update(security).set({ typeId, sectorId, regionId }).where(eq(security.id, params.id));
 		await syncEntityTags('security', params.id, tagNames);
+	},
+	delete: async ({ params }) => {
+		// holdings and price snapshots are removed by ON DELETE CASCADE
+		await db.delete(security).where(eq(security.id, params.id));
+		redirect(303, resolve('/securities'));
 	}
 };
