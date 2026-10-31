@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import SecurityPriceChart from '$lib/components/SecurityPriceChart.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
 	import { formatMoney } from '$lib/format';
 	import { enhance } from '$app/forms';
@@ -89,6 +90,10 @@
 			</div>
 		{/if}
 	</PageHeader>
+
+	<div class="mb-6 rounded-lg border bg-card p-4">
+		<SecurityPriceChart priceHistory={data.priceHistory} />
+	</div>
 
 	<Table.Root>
 		<Table.Header>
