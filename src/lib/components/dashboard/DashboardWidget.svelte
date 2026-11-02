@@ -172,7 +172,6 @@
 				{points}
 				seriesName="Total value"
 				formatValue={formatUsd}
-				chartType={item.config.chartType}
 				aside="{filterHoldings(holdings, item.config.filters).length} of {holdings.length} holdings"
 				emptyMessage="No price history for the holdings in this report."
 				fill

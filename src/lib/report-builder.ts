@@ -25,14 +25,6 @@ export type ReportConfig = {
 };
 
 /** Charts the total value of the filtered holdings over time, from the price snapshot history. */
-export type TimeChartType = 'area' | 'smooth' | 'line';
-
-export const TIME_CHART_TYPE_LABELS: Record<TimeChartType, string> = {
-	area: 'Area',
-	smooth: 'Smoothed line',
-	line: 'Line'
-};
-
 export type TimeInterval = 'day' | 'week' | 'month' | 'year';
 
 export const TIME_INTERVAL_LABELS: Record<TimeInterval, string> = {
@@ -44,7 +36,6 @@ export const TIME_INTERVAL_LABELS: Record<TimeInterval, string> = {
 
 export type TimeReportConfig = {
 	reportType: 'time';
-	chartType: TimeChartType;
 	/** One point per step on the x-axis, taking the last value in each. */
 	interval: TimeInterval;
 	/** Inclusive YYYY-MM-DD bounds on the chart; an empty string leaves that side open. */
@@ -214,7 +205,6 @@ export function filterOptions(holdings: HoldingWithTags[], field: FilterField): 
 export function defaultTimeReportConfig(holdings: HoldingWithTags[]): TimeReportConfig {
 	return {
 		reportType: 'time',
-		chartType: 'area',
 		interval: 'day',
 		startDate: '',
 		endDate: '',

@@ -15,7 +15,6 @@
 	import {
 		defaultReportConfig,
 		defaultTimeReportConfig,
-		type TimeChartType,
 		type TimeInterval,
 		isTimeReportConfig,
 		type Metric,
@@ -43,7 +42,6 @@
 	const savedTimeConfig = isTimeReportConfig(savedConfig)
 		? savedConfig
 		: defaultTimeReportConfig(data.holdings);
-	let timeChartType = $state<TimeChartType>(savedTimeConfig.chartType);
 	let interval = $state<TimeInterval>(savedTimeConfig.interval);
 	let startDate = $state(savedTimeConfig.startDate);
 	let endDate = $state(savedTimeConfig.endDate);
@@ -52,7 +50,7 @@
 
 	const config = $derived<SavedReportConfig>(
 		isTimeReport
-			? { reportType: 'time', chartType: timeChartType, interval, startDate, endDate, filters }
+			? { reportType: 'time', interval, startDate, endDate, filters }
 			: { metric, dimension, chartType, filters }
 	);
 
@@ -81,7 +79,6 @@
 	{#if isTimeReport}
 		<TimeReportToolbar
 			holdings={data.holdings}
-			bind:chartType={timeChartType}
 			bind:interval
 			bind:startDate
 			bind:endDate
@@ -130,7 +127,6 @@
 				{points}
 				seriesName="Total value"
 				formatValue={formatUsd}
-				chartType={config.chartType}
 				aside="{filterHoldings(data.holdings, config.filters).length} of {data.holdings
 					.length} holdings"
 				emptyMessage="No price history for the holdings in this report."

@@ -16,7 +16,6 @@
 		points,
 		seriesName = 'Value',
 		formatValue = formatMoney,
-		chartType = 'line',
 		aside = '',
 		emptyMessage = 'No data for this period.',
 		fill = false,
@@ -32,7 +31,6 @@
 		seriesName?: string;
 		/** Formats values on the y-axis and in the tooltip. */
 		formatValue?: (value: number) => string;
-		chartType?: 'line' | 'smooth' | 'area';
 		/** Small text opposite the title. */
 		aside?: string;
 		emptyMessage?: string;
@@ -64,10 +62,19 @@
 			},
 			textStyle: { fontSize: 13 }
 		},
-		grid: { left: compact ? 48 : 64, right: 16, top: 24, bottom: 32 },
+		grid: { left: compact ? 48 : 64, right: 16, top: 24, bottom: 48 },
 		xAxis: {
 			type: 'time',
-			axisLabel: { color: TEXT_MUTED, fontSize: 11 },
+			axisLabel: {
+				color: TEXT_MUTED,
+				fontSize: 11,
+				rotate: 30,
+				// Only label dates that have a data point; drop labels that would collide.
+				customValues: points.map((point) => new Date(point.time).getTime()),
+				hideOverlap: true,
+				// Always "Oct 12, 2026" regardless of the tick's granularity.
+				formatter: (timestamp: number) => dateFormatter.format(new Date(timestamp))
+			},
 			axisLine: { lineStyle: { color: GRID_LINE } }
 		},
 		yAxis: {
@@ -84,12 +91,11 @@
 			{
 				name: seriesName,
 				type: 'line',
-				smooth: chartType === 'smooth',
 				showSymbol: points.length <= 30,
 				data: points.map((point) => [point.time, point.value]),
 				itemStyle: { color: CATEGORICAL[0] },
 				lineStyle: { color: CATEGORICAL[0] },
-				areaStyle: chartType === 'area' ? { color: CATEGORICAL[0], opacity: 0.2 } : undefined
+				areaStyle: { color: CATEGORICAL[0], opacity: 0.2 }
 			}
 		]
 	});
