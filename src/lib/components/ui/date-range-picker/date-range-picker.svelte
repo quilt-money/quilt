@@ -1,47 +1,58 @@
 <script lang="ts">
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
-	import { CalendarDate, DateFormatter, getLocalTimeZone, today } from '@internationalized/date';
-	import * as Field from '$lib/components/ui/field/index.js';
+	import { DateFormatter, getLocalTimeZone, parseDate } from '@internationalized/date';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
 	import type { DateRange } from 'bits-ui';
 
-	const df = new DateFormatter('en-US', {
-		dateStyle: 'medium'
+	const dateFormatter = new DateFormatter('en-US', { dateStyle: 'medium' });
+
+	/** Inclusive YYYY-MM-DD bounds; an empty string leaves that side open. */
+	let {
+		startDate = $bindable(''),
+		endDate = $bindable(''),
+		id = 'date-range-picker'
+	}: { startDate?: string; endDate?: string; id?: string } = $props();
+
+	const range = $derived<DateRange>({
+		start: startDate ? parseDate(startDate) : undefined,
+		end: endDate ? parseDate(endDate) : undefined
 	});
 
-	const year = today(getLocalTimeZone()).year;
+	function setRange(next: DateRange | undefined) {
+		startDate = next?.start?.toString() ?? '';
+		endDate = next?.end?.toString() ?? '';
+	}
 
-	let value = $state<DateRange | undefined>({
-		start: new CalendarDate(year, 1, 20),
-		end: new CalendarDate(year, 1, 20).add({ days: 20 })
-	});
+	function formatDate(isoDate: string): string {
+		return dateFormatter.format(parseDate(isoDate).toDate(getLocalTimeZone()));
+	}
 </script>
 
-<Field.Field class="mx-auto w-60">
-	<Field.Label for="date-picker-range">Date Picker Range</Field.Label>
+<div class="flex items-center gap-2">
 	<Popover.Root>
-		<Popover.Trigger id="date-picker-range">
+		<Popover.Trigger {id}>
 			{#snippet child({ props })}
 				<Button {...props} variant="outline" class="justify-start px-2.5 font-normal">
 					<CalendarIcon data-icon="inline-start" />
-					{#if value?.start}
-						{#if value.end}
-							{df.format(value.start.toDate(getLocalTimeZone()))} - {df.format(
-								value.end.toDate(getLocalTimeZone())
-							)}
-						{:else}
-							{df.format(value.start.toDate(getLocalTimeZone()))}
-						{/if}
+					{#if startDate && endDate}
+						{formatDate(startDate)} - {formatDate(endDate)}
+					{:else if startDate}
+						{formatDate(startDate)}
+					{:else if endDate}
+						Up to {formatDate(endDate)}
 					{:else}
-						<span>Pick a date</span>
+						<span>All dates</span>
 					{/if}
 				</Button>
 			{/snippet}
 		</Popover.Trigger>
 		<Popover.Content class="w-auto p-0" align="start">
-			<RangeCalendar bind:value numberOfMonths={2} />
+			<RangeCalendar bind:value={() => range, setRange} numberOfMonths={2} />
 		</Popover.Content>
 	</Popover.Root>
-</Field.Field>
+	{#if startDate || endDate}
+		<Button variant="ghost" onclick={() => setRange(undefined)}>Clear</Button>
+	{/if}
+</div>
