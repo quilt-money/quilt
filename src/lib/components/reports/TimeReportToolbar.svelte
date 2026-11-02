@@ -28,13 +28,15 @@
 </script>
 
 <SectionatedHeader>
-	<ReportFilterBar {holdings} bind:filters>
-		<div class="flex items-center gap-2">
+	<ReportFilterBar {holdings} bind:filters />
+	<div class="flex flex-col gap-2 p-4">
+		<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Date range</p>
+		<div class="flex flex-wrap items-center gap-2">
 			<Label for="report-start-date" class="font-normal text-muted-foreground">From</Label>
 			<Input id="report-start-date" type="date" class="h-8 w-36" bind:value={startDate} />
 			<Label for="report-end-date" class="font-normal text-muted-foreground">To</Label>
 			<Input id="report-end-date" type="date" class="h-8 w-36" bind:value={endDate} />
 		</div>
-	</ReportFilterBar>
+	</div>
 	<ReportButtonGroup label="Interval" options={intervalOptions} bind:value={interval} />
 </SectionatedHeader>
