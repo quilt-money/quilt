@@ -1,8 +1,10 @@
 import { fail } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { getSyncSchedule, saveSyncSchedule } from '$lib/server/sync-scheduler';
 
 export async function load() {
-	return { syncSchedule: await getSyncSchedule() };
+	// Set by the Docker image from the release tag; unset when running locally.
+	return { version: env.APP_VERSION || 'dev', syncSchedule: await getSyncSchedule() };
 }
 
 export const actions = {

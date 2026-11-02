@@ -66,4 +66,6 @@
 
 		<div><Button type="submit">Save</Button></div>
 	</form>
+
+	<p class="mt-4 text-sm text-muted-foreground">Version {data.version}</p>
 </div>

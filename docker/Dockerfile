@@ -9,7 +9,10 @@ COPY . .
 # SvelteKit's postbuild step imports the DB module, so it needs a DATABASE_URL (never opened).
 RUN DATABASE_URL=/tmp/build.db bun run build
 
+# Declared after the build so a new release tag doesn't invalidate the cached build layers.
+ARG APP_VERSION=dev
 ENV NODE_ENV=production \
+	APP_VERSION=$APP_VERSION \
 	PORT=3000 \
 	DATABASE_URL=/data/portfolio.db
 RUN mkdir -p /data && chown node:node /data
