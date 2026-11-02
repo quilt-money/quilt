@@ -2,7 +2,10 @@
 	import { enhance } from '$app/forms';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import ReportChart from '$lib/components/ReportChart.svelte';
-	import TimeReportChart from '$lib/components/TimeReportChart.svelte';
+	import TimeSeriesGraph from '$lib/components/TimeSeriesGraph.svelte';
+	import { computeTimeSeries, filterHoldings } from '$lib/report-builder';
+	import { formatUsd } from '$lib/chart-theme';
+	import { formatMoney, percentChangeOverPeriod } from '$lib/format';
 	import ReportToolbar from '$lib/components/reports/ReportToolbar.svelte';
 	import TimeReportToolbar from '$lib/components/reports/TimeReportToolbar.svelte';
 	import ReportFormFields from '$lib/components/reports/ReportFormFields.svelte';
@@ -113,11 +116,18 @@
 
 			<div class="min-w-0">
 				{#if isTimeReportConfig(config)}
-					<TimeReportChart
+					{@const points = computeTimeSeries(data.holdings, data.priceHistory, config)}
+					<TimeSeriesGraph
 						{title}
-						holdings={data.holdings}
-						priceHistory={data.priceHistory}
-						{config}
+						heading={formatMoney(points.at(-1)?.value ?? 0)}
+						changeOverPeriod={percentChangeOverPeriod(points.map((point) => point.value))}
+						{points}
+						seriesName="Total value"
+						formatValue={formatUsd}
+						chartType={config.chartType}
+						aside="{filterHoldings(data.holdings, config.filters).length} of {data.holdings
+							.length} holdings"
+						emptyMessage="No price history for the holdings in this report."
 					/>
 				{:else}
 					<ReportChart {title} holdings={data.holdings} {config} />

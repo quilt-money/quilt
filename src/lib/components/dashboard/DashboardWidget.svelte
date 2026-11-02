@@ -3,7 +3,10 @@
 	import GripIcon from '@lucide/svelte/icons/grip-vertical';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import ReportChart from '$lib/components/ReportChart.svelte';
-	import TimeReportChart from '$lib/components/TimeReportChart.svelte';
+	import TimeSeriesGraph from '$lib/components/TimeSeriesGraph.svelte';
+	import { computeTimeSeries, filterHoldings } from '$lib/report-builder';
+	import { formatUsd } from '$lib/chart-theme';
+	import { formatMoney, percentChangeOverPeriod } from '$lib/format';
 	import { isTimeReportConfig } from '$lib/report-builder';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import type { HoldingWithTags } from '$lib/server/db/queries/holdings';
@@ -161,11 +164,17 @@
 >
 	<div class="relative h-full">
 		{#if isTimeReportConfig(item.config)}
-			<TimeReportChart
+			{@const points = computeTimeSeries(holdings, priceHistory, item.config)}
+			<TimeSeriesGraph
 				title={item.title}
-				{holdings}
-				{priceHistory}
-				config={item.config}
+				heading={formatMoney(points.at(-1)?.value ?? 0)}
+				changeOverPeriod={percentChangeOverPeriod(points.map((point) => point.value))}
+				{points}
+				seriesName="Total value"
+				formatValue={formatUsd}
+				chartType={item.config.chartType}
+				aside="{filterHoldings(holdings, item.config.filters).length} of {holdings.length} holdings"
+				emptyMessage="No price history for the holdings in this report."
 				fill
 				reportId={editMode ? undefined : item.reportId}
 			/>

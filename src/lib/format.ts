@@ -25,3 +25,10 @@ export function gainLossClass(value: number | null | undefined): string {
 	if (value == null || value === 0) return 'text-muted-foreground';
 	return value > 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500';
 }
+
+/** Percent change from the first to the last value, or null when there is no meaningful baseline. */
+export function percentChangeOverPeriod(values: number[]): number | null {
+	const firstValue = values[0];
+	if (values.length < 2 || !firstValue) return null;
+	return ((values[values.length - 1] - firstValue) / firstValue) * 100;
+}

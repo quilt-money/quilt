@@ -5,15 +5,19 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import SecurityPriceChart from '$lib/components/SecurityPriceChart.svelte';
+	import TimeSeriesGraph from '$lib/components/TimeSeriesGraph.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
-	import { formatMoney } from '$lib/format';
+	import { formatMoney, percentChangeOverPeriod } from '$lib/format';
 	import { enhance } from '$app/forms';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { portfolioHref } from '$lib/portfolio-filter';
 
 	let { data } = $props();
+
+	const pricePoints = $derived(
+		data.priceHistory.map((pricePoint) => ({ time: pricePoint.time, value: pricePoint.price }))
+	);
 
 	let open = $state(false);
 	let deleteOpen = $state(false);
@@ -77,7 +81,6 @@
 			<h1 class="text-2xl font-semibold">{data.security.symbol}</h1>
 		</div>
 		<p class="text-muted-foreground">{data.security.fullName ?? '—'}</p>
-		<p class="text-muted-foreground">Latest price: {formatMoney(data.latestPrice)}</p>
 		{#if data.tags.length > 0}
 			<div class="mt-1 flex flex-wrap gap-1">
 				{#each data.tags as tag (tag)}
@@ -91,8 +94,15 @@
 		{/if}
 	</PageHeader>
 
-	<div class="mb-6 rounded-lg border bg-card p-4">
-		<SecurityPriceChart priceHistory={data.priceHistory} />
+	<div class="mb-6">
+		<TimeSeriesGraph
+			heading=""
+			title={`Latest price: ${formatMoney(pricePoints.at(-1)?.value)}`}
+			changeOverPeriod={percentChangeOverPeriod(pricePoints.map((pricePoint) => pricePoint.value))}
+			points={pricePoints}
+			seriesName="Price"
+			emptyMessage="No price history yet. Sync to add one."
+		/>
 	</div>
 
 	<Table.Root>

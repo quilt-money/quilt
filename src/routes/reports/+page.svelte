@@ -108,7 +108,8 @@
 						<DropdownMenu.Trigger class={buttonVariants()}>Create report</DropdownMenu.Trigger>
 						<DropdownMenu.Content align="end">
 							<DropdownMenu.Item onSelect={() => createReport('chart')}>Chart</DropdownMenu.Item>
-							<DropdownMenu.Item onSelect={() => createReport('time')}>Time-based</DropdownMenu.Item
+							<DropdownMenu.Item onSelect={() => createReport('time')}
+								>Time series</DropdownMenu.Item
 							>
 							<DropdownMenu.Item onSelect={() => createReport('summary')}>
 								Summary
