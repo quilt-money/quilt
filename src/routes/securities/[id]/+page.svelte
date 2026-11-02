@@ -1,11 +1,13 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import TimeSeriesGraph from '$lib/components/TimeSeriesGraph.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
-	import { formatMoney } from '$lib/format';
+	import { formatMoney, percentChangeOverPeriod } from '$lib/format';
 	import { enhance } from '$app/forms';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -13,7 +15,12 @@
 
 	let { data } = $props();
 
+	const pricePoints = $derived(
+		data.priceHistory.map((pricePoint) => ({ time: pricePoint.time, value: pricePoint.price }))
+	);
+
 	let open = $state(false);
+	let deleteOpen = $state(false);
 	let typeId = $state(untrack(() => data.security.typeId ?? ''));
 	let sectorId = $state(untrack(() => data.security.sectorId ?? ''));
 	let regionId = $state(untrack(() => data.security.regionId ?? ''));
@@ -68,12 +75,12 @@
 	<PageHeader>
 		{#snippet actions()}
 			<Button variant="outline" onclick={() => (open = true)}>Edit</Button>
+			<Button variant="destructive" onclick={() => (deleteOpen = true)}>Delete</Button>
 		{/snippet}
 		<div class="flex items-baseline gap-3">
 			<h1 class="text-2xl font-semibold">{data.security.symbol}</h1>
 		</div>
 		<p class="text-muted-foreground">{data.security.fullName ?? '—'}</p>
-		<p class="text-muted-foreground">Latest price: {formatMoney(data.latestPrice)}</p>
 		{#if data.tags.length > 0}
 			<div class="mt-1 flex flex-wrap gap-1">
 				{#each data.tags as tag (tag)}
@@ -86,6 +93,17 @@
 			</div>
 		{/if}
 	</PageHeader>
+
+	<div class="mb-6">
+		<TimeSeriesGraph
+			heading=""
+			title={`Latest price: ${formatMoney(pricePoints.at(-1)?.value)}`}
+			changeOverPeriod={percentChangeOverPeriod(pricePoints.map((pricePoint) => pricePoint.value))}
+			points={pricePoints}
+			seriesName="Price"
+			emptyMessage="No price history yet. Sync to add one."
+		/>
+	</div>
 
 	<Table.Root>
 		<Table.Header>
@@ -180,3 +198,21 @@
 		</form>
 	</Drawer.Content>
 </Drawer.Root>
+
+<Dialog.Root bind:open={deleteOpen}>
+	<Dialog.Content>
+		<form method="POST" action="?/delete" use:enhance class="flex flex-col gap-4">
+			<Dialog.Header>
+				<Dialog.Title>Delete {data.security.symbol}?</Dialog.Title>
+				<Dialog.Description>
+					This permanently deletes the security, its price history, and holdings across accounts.
+					{data.security.symbol} is used by {data.holdings.length} holdings.
+				</Dialog.Description>
+			</Dialog.Header>
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (deleteOpen = false)}>Cancel</Button>
+				<Button type="submit" variant="destructive">Delete</Button>
+			</Dialog.Footer>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>

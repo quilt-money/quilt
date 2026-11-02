@@ -43,6 +43,13 @@
       "when": 1791776320387,
       "tag": "0005_glorious_ink",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792554913468,
+      "tag": "0006_illegal_lightspeed",
+      "breakpoints": true
     }
   ]
 }

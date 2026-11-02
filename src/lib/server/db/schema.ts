@@ -115,3 +115,11 @@ export const dashboardItem = sqliteTable('dashboard_item', {
 	columnSpan: integer('column_span').notNull(),
 	rowSpan: integer('row_span').notNull()
 });
+
+export const syncSchedule = sqliteTable('sync_schedule', {
+	id: integer('id').primaryKey(),
+	enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+	time: text('time').notNull().default('02:00'),
+	lastRunAt: text('last_run_at'),
+	lastRunSummary: text('last_run_summary')
+});

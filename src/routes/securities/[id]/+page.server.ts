@@ -8,8 +8,9 @@ import {
 	holding,
 	account
 } from '$lib/server/db/schema';
-import { desc, eq } from 'drizzle-orm';
-import { error } from '@sveltejs/kit';
+import { asc, eq } from 'drizzle-orm';
+import { error, redirect } from '@sveltejs/kit';
+import { resolve } from '$app/paths';
 import { getTagsForEntity, listAllTagNames, syncEntityTags } from '$lib/server/db/queries/tags';
 
 export async function load({ params }) {
@@ -27,14 +28,13 @@ export async function load({ params }) {
 		.limit(1);
 	if (!sec) error(404, 'Security not found');
 
-	const [latestSnapshot, securityTypes, sectors, regions, holdings, tags, allTags] =
+	const [priceHistory, securityTypes, sectors, regions, holdings, tags, allTags] =
 		await Promise.all([
 			db
-				.select({ price: priceSnapshot.price, snapshotTime: priceSnapshot.snapshotTime })
+				.select({ time: priceSnapshot.snapshotTime, price: priceSnapshot.price })
 				.from(priceSnapshot)
 				.where(eq(priceSnapshot.securityId, params.id))
-				.orderBy(desc(priceSnapshot.snapshotTime))
-				.limit(1),
+				.orderBy(asc(priceSnapshot.snapshotTime)),
 			db.select().from(securityType).orderBy(securityType.name),
 			db.select().from(sector).orderBy(sector.name),
 			db.select().from(region).orderBy(region.name),
@@ -55,7 +55,8 @@ export async function load({ params }) {
 
 	return {
 		security: sec,
-		latestPrice: latestSnapshot[0]?.price ?? null,
+		priceHistory,
+		latestPrice: priceHistory.at(-1)?.price ?? null,
 		securityTypes,
 		sectors,
 		regions,
@@ -76,5 +77,10 @@ export const actions = {
 
 		await db.update(security).set({ typeId, sectorId, regionId }).where(eq(security.id, params.id));
 		await syncEntityTags('security', params.id, tagNames);
+	},
+	delete: async ({ params }) => {
+		// holdings and price snapshots are removed by ON DELETE CASCADE
+		await db.delete(security).where(eq(security.id, params.id));
+		redirect(303, resolve('/securities'));
 	}
 };
