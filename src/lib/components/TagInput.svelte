@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+
 	let {
 		availableTags = [],
 		initialTags = [],
@@ -9,7 +11,8 @@
 		inputName?: string;
 	} = $props();
 
-	let selected = $state<string[]>([...initialTags]);
+	// Seeds the editable selection once; later changes to `initialTags` are intentionally ignored.
+	let selected = $state<string[]>(untrack(() => [...initialTags]));
 	let inputValue = $state('');
 	let showDropdown = $state(false);
 	let inputEl = $state<HTMLInputElement | undefined>(undefined);
